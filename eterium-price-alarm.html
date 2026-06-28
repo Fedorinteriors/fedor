@@ -140,6 +140,7 @@
     <button id="stopBtn" class="secondary" disabled>⏸ Pauziraj</button>
     <button id="testSoundBtn" class="secondary">🔊 Test zvuka</button>
     <button id="notifBtn" class="secondary">🔔 Omogući notifikacije</button>
+    <button id="saveBtn" class="secondary">💾 Sačuvaj stranicu</button>
   </div>
   <div class="checks" style="margin-top:14px;">
     <label><input type="checkbox" id="chkPrice" checked> Alarm za cenu</label>
@@ -237,6 +238,25 @@
     else { beep(700,160,"sine",0); }
   }
   el("testSoundBtn").addEventListener("click", ()=>alarmSound(false));
+
+  // ---------- save page locally (works even inside a sandboxed in-app preview) ----------
+  el("saveBtn").addEventListener("click", ()=>{
+    try{
+      const html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const blob = new Blob([html], {type:"text/html"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "eterium-price-alarm.html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 5000);
+      addLog("Stranica sačuvana (download pokrenut). Otvori sačuvani fajl u pravom browser tabu da bi alarmi radili.", null);
+    }catch(e){
+      alert("Čuvanje nije uspelo u ovom okruženju: " + e.message + "\nProbaj da otvoriš link na GitHub-u i preuzmeš fajl odatle.");
+    }
+  });
 
   // ---------- notifications ----------
   el("notifBtn").addEventListener("click", async ()=>{
