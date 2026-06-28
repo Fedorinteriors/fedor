@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETH (Eterium) — Price &amp; Indicator Alarm</title>
+<style>
+  :root{
+    --bg:#0b0f17; --panel:#111826; --panel2:#161f30; --border:#22304a;
+    --text:#e7edf7; --muted:#8ea0bd; --green:#27d17f; --red:#ff4d6d;
+    --amber:#ffb648; --blue:#4da3ff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--text); padding:20px;
+  }
+  h1{font-size:20px; margin:0 0 4px;}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
+  .price-row{
+    display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:16px 20px; margin-bottom:16px;
+  }
+  .price-row .big{font-size:34px; font-weight:700;}
+  .price-row .chg{font-size:14px; font-weight:600; padding:2px 8px; border-radius:6px;}
+  .chg.up{color:var(--green); background:rgba(39,209,127,.12);}
+  .chg.down{color:var(--red); background:rgba(255,77,109,.12);}
+  .meta{color:var(--muted); font-size:12px; margin-left:auto;}
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:16px 18px; margin-bottom:16px;
+  }
+  .panel h2{font-size:14px; margin:0 0 12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
+  .controls{display:flex; flex-wrap:wrap; gap:14px; align-items:end;}
+  .field{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
+  .field input, .field select{
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:8px 10px; font-size:14px; min-width:120px;
+  }
+  button{
+    cursor:pointer; border:none; border-radius:8px; padding:10px 16px;
+    font-size:14px; font-weight:600; color:#0b0f17; background:var(--blue);
+    transition:opacity .15s;
+  }
+  button:hover{opacity:.85;}
+  button.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--border);}
+  button.danger{background:var(--red); color:#fff;}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  .status-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--muted); margin-right:6px;}
+  .status-dot.live{background:var(--green); box-shadow:0 0 8px var(--green);}
+  .status-dot.error{background:var(--red); box-shadow:0 0 8px var(--red);}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
+  .tf-card{
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px;
+    position:relative; overflow:hidden;
+  }
+  .tf-card.alert{border-color:var(--red); box-shadow:0 0 0 1px var(--red), 0 0 16px rgba(255,77,109,.35);}
+  .tf-card h3{margin:0 0 10px; font-size:15px; display:flex; justify-content:space-between; align-items:center;}
+  .tf-card h3 .tag{font-size:10px; color:var(--muted); font-weight:400;}
+  .row{display:flex; justify-content:space-between; font-size:13px; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,.06);}
+  .row:last-child{border-bottom:none;}
+  .row .lbl{color:var(--muted);}
+  .row .val{font-weight:600; font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .val.green{color:var(--green);} .val.red{color:var(--red);} .val.amber{color:var(--amber);}
+  .bar-track{height:6px; background:#0b0f17; border-radius:4px; overflow:hidden; margin-top:4px;}
+  .bar-fill{height:100%; border-radius:4px; transition:width .3s;}
+  canvas.spark{width:100%; height:48px; display:block; margin-top:8px;}
+  .badge{display:inline-block; font-size:10px; padding:2px 7px; border-radius:5px; font-weight:700; letter-spacing:.03em;}
+  .badge.bull{background:rgba(39,209,127,.15); color:var(--green);}
+  .badge.bear{background:rgba(255,77,109,.15); color:var(--red);}
+  .badge.none{background:rgba(142,160,189,.12); color:var(--muted);}
+  #log{max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;}
+  .log-entry{font-size:12.5px; padding:8px 10px; border-radius:7px; background:var(--panel2); border-left:3px solid var(--border); display:flex; justify-content:space-between; gap:10px;}
+  .log-entry.crit{border-left-color:var(--red); background:rgba(255,77,109,.08);}
+  .log-entry.warn{border-left-color:var(--amber); background:rgba(255,182,72,.08);}
+  .log-entry .t{color:var(--muted); white-space:nowrap; font-family:ui-monospace,monospace; font-size:11px;}
+  #flashOverlay{
+    position:fixed; inset:0; display:none; z-index:999; pointer-events:none;
+    background:rgba(255,77,109,.18); animation:flash 0.7s steps(1) infinite;
+  }
+  @keyframes flash{50%{background:rgba(255,77,109,.02);}}
+  #bigAlertBanner{
+    display:none; position:fixed; top:18px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#ff4d6d,#c2275f); color:#fff; padding:16px 26px;
+    border-radius:12px; font-weight:700; font-size:15px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,.4);
+    max-width:90vw; text-align:center;
+  }
+  #bigAlertBanner button{margin-left:14px; background:#fff; color:#c2275f; padding:6px 12px; font-size:12px;}
+  .checks{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--muted);}
+  .checks label{display:flex; align-items:center; gap:6px; cursor:pointer;}
+  footer{color:var(--muted); font-size:11px; margin-top:20px; line-height:1.6;}
+  a{color:var(--blue);}
+</style>
+</head>
+<body>
+
+<div id="flashOverlay"></div>
+<div id="bigAlertBanner"></div>
+
+<h1>ETH (Eterium) — Price &amp; Indicator Alarm</h1>
+<div class="sub">Pratite cenu, RSI, MACD i Accumulation/Distribution na 15m / 30m / 45m / 2h / 4h. Podaci: Binance public API (ETHUSDT).</div>
+
+<div class="price-row">
+  <span class="status-dot" id="statusDot"></span>
+  <span id="bigPrice" class="big">—</span>
+  <span id="priceChg" class="chg">—</span>
+  <span class="meta" id="lastUpdate">Nije pokrenuto</span>
+</div>
+
+<div class="panel">
+  <h2>Podešavanja alarma</h2>
+  <div class="controls">
+    <div class="field">
+      <label for="targetPrice">Donji nivo cene (USD) — alarm kad cena ≤</label>
+      <input type="number" id="targetPrice" placeholder="npr. 2400" step="0.01">
+    </div>
+    <div class="field">
+      <label for="rsiOversold">RSI prag preprodatosti (oversold)</label>
+      <input type="number" id="rsiOversold" value="30" min="1" max="50">
+    </div>
+    <div class="field">
+      <label for="rsiOverbought">RSI prag prekupljenosti (overbought)</label>
+      <input type="number" id="rsiOverbought" value="70" min="50" max="99">
+    </div>
+    <div class="field">
+      <label for="rsiDivThresh">RSI prag za jaki divergencija-alarm (30m)</label>
+      <input type="number" id="rsiDivThresh" value="20" min="1" max="50">
+    </div>
+    <div class="field">
+      <label for="pollInterval">Interval provere</label>
+      <select id="pollInterval">
+        <option value="20000">20 sekundi</option>
+        <option value="30000" selected>30 sekundi</option>
+        <option value="60000">60 sekundi</option>
+        <option value="120000">2 minuta</option>
+      </select>
+    </div>
+    <button id="startBtn">▶ Pokreni praćenje</button>
+    <button id="stopBtn" class="secondary" disabled>⏸ Pauziraj</button>
+    <button id="testSoundBtn" class="secondary">🔊 Test zvuka</button>
+    <button id="notifBtn" class="secondary">🔔 Omogući notifikacije</button>
+  </div>
+  <div class="checks" style="margin-top:14px;">
+    <label><input type="checkbox" id="chkPrice" checked> Alarm za cenu</label>
+    <label><input type="checkbox" id="chkRsi" checked> RSI alarmi</label>
+    <label><input type="checkbox" id="chkMacd" checked> MACD ukrštanja</label>
+    <label><input type="checkbox" id="chkAd" checked> Accumulation/Distribution trend</label>
+    <label><input type="checkbox" id="chkDiv" checked> Divergencija (RSI vs cena)</label>
+    <label><input type="checkbox" id="chkMute"> Isključi zvuk</label>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Vremenski okviri</h2>
+  <div class="grid" id="tfGrid"></div>
+</div>
+
+<div class="panel">
+  <h2>Log alarma</h2>
+  <div id="log"><div class="log-entry"><span>Čeka se pokretanje praćenja…</span></div></div>
+</div>
+
+<footer>
+  Podaci se povlače direktno iz browsera sa Binance public API-ja (api.binance.com) za par ETHUSDT — bez API ključa, bez servera.
+  45-minutni okvir se računa agregacijom tri uzastopne 15-minutne sveće. Divergencija se detektuje upoređivanjem poslednja dva lokalna ekstrema cene i RSI (pojednostavljena heuristika, nije finansijski savet).
+  Stranica mora ostati otvorena u browseru da bi alarmi radili; za alarme u pozadini omogućite notifikacije.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  const SYMBOL = "ETHUSDT";
+  const TIMEFRAMES = [
+    { key:"15m", label:"15 min", binanceInterval:"15m", aggregate:1 },
+    { key:"30m", label:"30 min", binanceInterval:"30m", aggregate:1, strongDivergence:true },
+    { key:"45m", label:"45 min", binanceInterval:"15m", aggregate:3, bucketMs:45*60*1000 },
+    { key:"2h",  label:"2 sata", binanceInterval:"2h", aggregate:1 },
+    { key:"4h",  label:"4 sata", binanceInterval:"4h", aggregate:1 },
+  ];
+
+  const state = {
+    running:false,
+    timer:null,
+    lastPrice:null,
+    prevPrice:null,
+    tfData:{},      // key -> {candles, closes, rsi, macd, ad, divergence}
+    alarmedKeys:new Set(), // edge-trigger memory
+  };
+
+  // ---------- DOM ----------
+  const el = (id)=>document.getElementById(id);
+  const grid = el("tfGrid");
+  const log = el("log");
+  const flashOverlay = el("flashOverlay");
+  const bigBanner = el("bigAlertBanner");
+
+  TIMEFRAMES.forEach(tf=>{
+    const card = document.createElement("div");
+    card.className = "tf-card";
+    card.id = "card-"+tf.key;
+    card.innerHTML = `
+      <h3>${tf.label} <span class="tag">${tf.strongDivergence ? "primarni za divergenciju" : ""}</span></h3>
+      <div class="row"><span class="lbl">Cena</span><span class="val" id="price-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">RSI(14)</span><span class="val" id="rsi-${tf.key}">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="rsibar-${tf.key}" style="width:0%;background:var(--blue);"></div></div>
+      <div class="row" style="margin-top:8px;"><span class="lbl">MACD</span><span class="val" id="macd-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">Signal</span><span class="val" id="macdsig-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">Histogram</span><span class="val" id="macdhist-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">A/D linija</span><span class="val" id="ad-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">Divergencija</span><span class="val" id="div-${tf.key}"><span class="badge none">—</span></span></div>
+      <canvas class="spark" id="spark-${tf.key}"></canvas>
+    `;
+    grid.appendChild(card);
+  });
+
+  // ---------- audio ----------
+  let audioCtx = null;
+  function beep(freq=880, duration=180, type="sine", delay=0){
+    if (el("chkMute").checked) return;
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      const t0 = audioCtx.currentTime + delay;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.25, t0+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration/1000);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0); osc.stop(t0+duration/1000+0.05);
+    }catch(e){ /* ignore audio errors (autoplay policies etc.) */ }
+  }
+  function alarmSound(critical){
+    if (critical){ beep(1100,220,"square",0); beep(1400,220,"square",0.25); beep(1100,260,"square",0.5); }
+    else { beep(700,160,"sine",0); }
+  }
+  el("testSoundBtn").addEventListener("click", ()=>alarmSound(false));
+
+  // ---------- notifications ----------
+  el("notifBtn").addEventListener("click", async ()=>{
+    if (!("Notification" in window)){ alert("Browser ne podržava notifikacije."); return; }
+    const perm = await Notification.requestPermission();
+    el("notifBtn").textContent = perm === "granted" ? "🔔 Notifikacije aktivne" : "🔔 Omogući notifikacije";
+  });
+  function notify(title, body){
+    if ("Notification" in window && Notification.permission === "granted"){
+      try{ new Notification(title, {body}); }catch(e){}
+    }
+  }
+
+  // ---------- log ----------
+  function addLog(message, level){
+    const entry = document.createElement("div");
+    entry.className = "log-entry" + (level === "crit" ? " crit" : level === "warn" ? " warn" : "");
+    const time = new Date().toLocaleTimeString();
+    entry.innerHTML = `<span>${message}</span><span class="t">${time}</span>`;
+    log.prepend(entry);
+    while (log.children.length > 80) log.removeChild(log.lastChild);
+  }
+
+  function triggerAlarm(uniqueKey, message, level, critical){
+    // edge-trigger: only alert once per condition until it resets (handled by caller clearing key)
+    if (state.alarmedKeys.has(uniqueKey)) return;
+    state.alarmedKeys.add(uniqueKey);
+    addLog(message, level);
+    alarmSound(critical);
+    notify(critical ? "⚠ ETH JAKI ALARM" : "ETH alarm", message);
+    if (critical) showBigBanner(message);
+  }
+  function clearAlarmKey(uniqueKey){ state.alarmedKeys.delete(uniqueKey); }
+
+  let bannerTimeout = null;
+  function showBigBanner(message){
+    bigBanner.innerHTML = `🚨 ${message} <button id="closeBanner">U redu</button>`;
+    bigBanner.style.display = "block";
+    flashOverlay.style.display = "block";
+    el("closeBanner").addEventListener("click", hideBigBanner);
+    clearTimeout(bannerTimeout);
+    bannerTimeout = setTimeout(hideBigBanner, 30000);
+  }
+  function hideBigBanner(){
+    bigBanner.style.display = "none";
+    flashOverlay.style.display = "none";
+  }
+
+  // ---------- math: indicators ----------
+  function computeEMASeries(values, period){
+    const k = 2/(period+1);
+    const out = new Array(values.length).fill(null);
+    let prevEma = null;
+    for (let i=0;i<values.length;i++){
+      if (i === period-1){
+        let sum=0; for(let j=0;j<period;j++) sum+=values[j];
+        prevEma = sum/period;
+        out[i] = prevEma;
+      } else if (i >= period){
+        prevEma = values[i]*k + prevEma*(1-k);
+        out[i] = prevEma;
+      }
+    }
+    return out;
+  }
+
+  function computeRSISeries(closes, period=14){
+    const out = new Array(closes.length).fill(null);
+    if (closes.length < period+1) return out;
+    let gainSum=0, lossSum=0;
+    for (let i=1;i<=period;i++){
+      const diff = closes[i]-closes[i-1];
+      if (diff>=0) gainSum+=diff; else lossSum-=diff;
+    }
+    let avgGain = gainSum/period, avgLoss = lossSum/period;
+    out[period] = avgLoss===0 ? 100 : 100 - (100/(1+(avgGain/avgLoss)));
+    for (let i=period+1;i<closes.length;i++){
+      const diff = closes[i]-closes[i-1];
+      const gain = diff>0?diff:0, loss = diff<0?-diff:0;
+      avgGain = (avgGain*(period-1)+gain)/period;
+      avgLoss = (avgLoss*(period-1)+loss)/period;
+      out[i] = avgLoss===0 ? 100 : 100 - (100/(1+(avgGain/avgLoss)));
+    }
+    return out;
+  }
+
+  function computeMACD(closes, fast=12, slow=26, signalPeriod=9){
+    const emaFast = computeEMASeries(closes, fast);
+    const emaSlow = computeEMASeries(closes, slow);
+    const macdLine = closes.map((_,i)=> (emaFast[i]!=null && emaSlow[i]!=null) ? emaFast[i]-emaSlow[i] : null);
+    const macdValues = macdLine.filter(v=>v!=null);
+    const signalRaw = computeEMASeries(macdValues, signalPeriod);
+    const signalLine = new Array(closes.length).fill(null);
+    let si=0;
+    for (let i=0;i<closes.length;i++){
+      if (macdLine[i]!=null){ signalLine[i] = signalRaw[si] != null ? signalRaw[si] : null; si++; }
+    }
+    const histogram = closes.map((_,i)=> (macdLine[i]!=null && signalLine[i]!=null) ? macdLine[i]-signalLine[i] : null);
+    return { macdLine, signalLine, histogram };
+  }
+
+  function computeAD(candles){
+    let cum = 0;
+    return candles.map(c=>{
+      const range = c.high - c.low;
+      const mfm = range === 0 ? 0 : ((c.close - c.low) - (c.high - c.close)) / range;
+      cum += mfm * c.volume;
+      return cum;
+    });
+  }
+
+  // simple pivot-based divergence detector comparing price vs RSI
+  function findDivergence(closes, rsi, lookback=60, pivotWindow=2, minSeparation=3){
+    const n = closes.length;
+    const start = Math.max(pivotWindow, n-lookback);
+    const lows = [], highs = [];
+    for (let i=start; i<n-pivotWindow; i++){
+      if (rsi[i]==null) continue;
+      let isLow=true, isHigh=true;
+      for (let w=1;w<=pivotWindow;w++){
+        if (closes[i] > closes[i-w] || closes[i] > closes[i+w]) isLow=false;
+        if (closes[i] < closes[i-w] || closes[i] < closes[i+w]) isHigh=false;
+      }
+      if (isLow) lows.push(i);
+      if (isHigh) highs.push(i);
+    }
+    function lastTwoFarEnough(arr){
+      const filtered=[];
+      for (const idx of arr){
+        if (!filtered.length || idx-filtered[filtered.length-1] >= minSeparation) filtered.push(idx);
+      }
+      return filtered.slice(-2);
+    }
+    const lastLows = lastTwoFarEnough(lows);
+    const lastHighs = lastTwoFarEnough(highs);
+
+    let result = { type:null, detail:"" };
+    if (lastLows.length === 2){
+      const [a,b] = lastLows;
+      if (closes[b] < closes[a] && rsi[b] > rsi[a]){
+        result = { type:"bullish", detail:`Cena niži low (${closes[a].toFixed(2)}→${closes[b].toFixed(2)}), RSI viši low (${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)})`, rsiAtPivot: rsi[b] };
+      }
+    }
+    if (lastHighs.length === 2){
+      const [a,b] = lastHighs;
+      if (closes[b] > closes[a] && rsi[b] < rsi[a]){
+        // bearish takes priority only if no bullish already found, otherwise report both via type 'mixed' (rare) - keep simple: prefer most recent pivot
+        const bearish = { type:"bearish", detail:`Cena viši high (${closes[a].toFixed(2)}→${closes[b].toFixed(2)}), RSI niži high (${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)})`, rsiAtPivot: rsi[b] };
+        if (!result.type || (highs.length && lows.length && lastHighs[1] > lastLows[1])) result = bearish;
+      }
+    }
+    return result;
+  }
+
+  // ---------- aggregation ----------
+  function aggregateCandles(candles, bucketMs){
+    const buckets = new Map();
+    for (const c of candles){
+      const bucketKey = Math.floor(c.openTime / bucketMs);
+      if (!buckets.has(bucketKey)) buckets.set(bucketKey, []);
+      buckets.get(bucketKey).push(c);
+    }
+    const keys = Array.from(buckets.keys()).sort((a,b)=>a-b);
+    const out = [];
+    for (const k of keys){
+      const group = buckets.get(k);
+      out.push({
+        openTime: k*bucketMs,
+        open: group[0].open,
+        high: Math.max(...group.map(g=>g.high)),
+        low: Math.min(...group.map(g=>g.low)),
+        close: group[group.length-1].close,
+        volume: group.reduce((s,g)=>s+g.volume,0),
+        complete: group.length >= (bucketMs / (15*60*1000)) // full group expected size
+      });
+    }
+    // drop the last bucket if it's incomplete (still forming)
+    if (out.length && !out[out.length-1].complete) out.pop();
+    return out;
+  }
+
+  // ---------- fetch ----------
+  async function fetchKlines(interval, limit){
+    const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${interval}&limit=${limit}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Binance API error " + res.status);
+    const raw = await res.json();
+    return raw.map(k=>({
+      openTime:k[0], open:+k[1], high:+k[2], low:+k[3], close:+k[4], volume:+k[5], closeTime:k[6]
+    }));
+  }
+
+  // ---------- sparkline ----------
+  function drawSpark(canvasId, values){
+    const canvas = el(canvasId);
+    if (!canvas || !values.length) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth || 200, h = canvas.clientHeight || 48;
+    canvas.width = w*dpr; canvas.height = h*dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = (max-min) || 1;
+    ctx.beginPath();
+    values.forEach((v,i)=>{
+      const x = (i/(values.length-1))*w;
+      const y = h - ((v-min)/range)*h;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = values[values.length-1] >= values[0] ? "#27d17f" : "#ff4d6d";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // ---------- per-timeframe processing ----------
+  async function processTimeframe(tf){
+    const limit = 300;
+    let candles;
+    if (tf.bucketMs){
+      const raw = await fetchKlines(tf.binanceInterval, limit);
+      candles = aggregateCandles(raw, tf.bucketMs);
+    } else {
+      candles = await fetchKlines(tf.binanceInterval, limit);
+    }
+    if (candles.length < 35) return; // not enough data yet
+
+    const closes = candles.map(c=>c.close);
+    const rsi = computeRSISeries(closes, 14);
+    const macd = computeMACD(closes, 12, 26, 9);
+    const ad = computeAD(candles);
+    const divergence = findDivergence(closes, rsi, 60);
+
+    const lastClose = closes[closes.length-1];
+    const lastRSI = rsi[rsi.length-1];
+    const lastMacd = macd.macdLine[macd.macdLine.length-1];
+    const lastSignal = macd.signalLine[macd.signalLine.length-1];
+    const lastHist = macd.histogram[macd.histogram.length-1];
+    const prevHist = macd.histogram[macd.histogram.length-2];
+    const lastAD = ad[ad.length-1];
+    const adPrev5 = ad[Math.max(0, ad.length-6)];
+
+    state.tfData[tf.key] = { candles, closes, rsi, macd, ad, divergence, lastClose, lastRSI };
+
+    renderTimeframe(tf, { lastClose, lastRSI, lastMacd, lastSignal, lastHist, lastAD, adPrev5, divergence, closes });
+    evaluateAlarms(tf, { lastClose, lastRSI, lastMacd, lastSignal, lastHist, prevHist, lastAD, adPrev5, divergence });
+
+    return lastClose;
+  }
+
+  function fmt(n, d=2){ return (n==null || isNaN(n)) ? "—" : n.toFixed(d); }
+
+  function renderTimeframe(tf, d){
+    el(`price-${tf.key}`).textContent = "$" + fmt(d.lastClose);
+    const rsiEl = el(`rsi-${tf.key}`);
+    rsiEl.textContent = fmt(d.lastRSI,1);
+    rsiEl.className = "val " + (d.lastRSI<30 ? "green" : d.lastRSI>70 ? "red" : "");
+    const bar = el(`rsibar-${tf.key}`);
+    bar.style.width = Math.min(100,Math.max(0,d.lastRSI||0)) + "%";
+    bar.style.background = d.lastRSI<30 ? "var(--green)" : d.lastRSI>70 ? "var(--red)" : "var(--blue)";
+
+    const macdEl = el(`macd-${tf.key}`);
+    macdEl.textContent = fmt(d.lastMacd,3);
+    el(`macdsig-${tf.key}`).textContent = fmt(d.lastSignal,3);
+    const histEl = el(`macdhist-${tf.key}`);
+    histEl.textContent = fmt(d.lastHist,3);
+    histEl.className = "val " + (d.lastHist>0 ? "green" : "red");
+
+    const adEl = el(`ad-${tf.key}`);
+    const adTrendUp = d.lastAD > d.adPrev5;
+    adEl.innerHTML = (adTrendUp ? "▲ " : "▼ ") + fmt(d.lastAD,0);
+    adEl.className = "val " + (adTrendUp ? "green" : "red");
+
+    const divEl = el(`div-${tf.key}`);
+    if (d.divergence.type === "bullish") divEl.innerHTML = `<span class="badge bull" title="${d.divergence.detail}">BULLISH DIV</span>`;
+    else if (d.divergence.type === "bearish") divEl.innerHTML = `<span class="badge bear" title="${d.divergence.detail}">BEARISH DIV</span>`;
+    else divEl.innerHTML = `<span class="badge none">—</span>`;
+
+    drawSpark(`spark-${tf.key}`, d.closes.slice(-60));
+
+    const card = el(`card-${tf.key}`);
+    const flagged = d.divergence.type === "bullish" && tf.strongDivergence && d.lastRSI < parseFloat(el("rsiDivThresh").value || 20);
+    card.classList.toggle("alert", flagged);
+  }
+
+  function evaluateAlarms(tf, d){
+    const rsiOversold = parseFloat(el("rsiOversold").value || 30);
+    const rsiOverbought = parseFloat(el("rsiOverbought").value || 70);
+    const rsiDivThresh = parseFloat(el("rsiDivThresh").value || 20);
+
+    // RSI oversold / overbought
+    if (el("chkRsi").checked){
+      const lowKey = `${tf.key}-rsi-low`, highKey = `${tf.key}-rsi-high`;
+      if (d.lastRSI < rsiOversold){
+        triggerAlarm(lowKey, `[${tf.label}] RSI preprodato: ${d.lastRSI.toFixed(1)} (< ${rsiOversold})`, "warn", false);
+      } else clearAlarmKey(lowKey);
+      if (d.lastRSI > rsiOverbought){
+        triggerAlarm(highKey, `[${tf.label}] RSI prekupljeno: ${d.lastRSI.toFixed(1)} (> ${rsiOverbought})`, "warn", false);
+      } else clearAlarmKey(highKey);
+    }
+
+    // MACD cross
+    if (el("chkMacd").checked && d.prevHist != null && d.lastHist != null){
+      const bullKey = `${tf.key}-macd-bull`, bearKey = `${tf.key}-macd-bear`;
+      if (d.prevHist <= 0 && d.lastHist > 0){
+        triggerAlarm(bullKey+Date.now(), `[${tf.label}] MACD bullish ukrštanje (histogram ${d.prevHist.toFixed(3)} → ${d.lastHist.toFixed(3)})`, "warn", false);
+      }
+      if (d.prevHist >= 0 && d.lastHist < 0){
+        triggerAlarm(bearKey+Date.now(), `[${tf.label}] MACD bearish ukrštanje (histogram ${d.prevHist.toFixed(3)} → ${d.lastHist.toFixed(3)})`, "warn", false);
+      }
+    }
+
+    // A/D trend confirmation (informational alarm when AD diverges from price direction)
+    if (el("chkAd").checked){
+      const adKey = `${tf.key}-ad-trend`;
+      const adTrendUp = d.lastAD > d.adPrev5;
+      const priceTrendDown = state.prevPrice != null && d.lastClose < state.prevPrice;
+      if (adTrendUp && priceTrendDown){
+        triggerAlarm(adKey, `[${tf.label}] A/D linija raste dok cena pada — moguća akumulacija`, "warn", false);
+      } else clearAlarmKey(adKey);
+    }
+
+    // Divergence alarms
+    if (el("chkDiv").checked){
+      const divKey = `${tf.key}-div-${d.divergence.type}`;
+      if (d.divergence.type === "bullish"){
+        const strong = tf.strongDivergence && d.lastRSI < rsiDivThresh;
+        triggerAlarm(divKey, `[${tf.label}] BULLISH divergencija (RSI ${d.lastRSI.toFixed(1)}) — ${d.divergence.detail}` + (strong ? " ⚠ RSI ispod praga, jak signal!" : ""), strong?"crit":"warn", strong);
+      } else if (d.divergence.type === "bearish"){
+        triggerAlarm(divKey, `[${tf.label}] BEARISH divergencija (RSI ${d.lastRSI.toFixed(1)}) — ${d.divergence.detail}`, "warn", false);
+      } else {
+        clearAlarmKey(`${tf.key}-div-bullish`);
+        clearAlarmKey(`${tf.key}-div-bearish`);
+      }
+    }
+  }
+
+  // ---------- price alarm (global) ----------
+  function evaluatePriceAlarm(price){
+    if (!el("chkPrice").checked) return;
+    const target = parseFloat(el("targetPrice").value);
+    if (isNaN(target)) return;
+    const key = "global-price-target";
+    if (price <= target){
+      triggerAlarm(key, `ETH dostigao ciljnu cenu: $${price.toFixed(2)} (cilj ≤ $${target.toFixed(2)})`, "crit", true);
+    } else {
+      clearAlarmKey(key);
+    }
+  }
+
+  // ---------- main poll ----------
+  async function pollOnce(){
+    try{
+      let mainPrice = null;
+      for (const tf of TIMEFRAMES){
+        const lastClose = await processTimeframe(tf);
+        if (tf.key === "15m" && lastClose != null) mainPrice = lastClose;
+      }
+      if (mainPrice == null){
+        // fallback: use any timeframe's last close
+        const any = Object.values(state.tfData)[0];
+        if (any) mainPrice = any.lastClose;
+      }
+      if (mainPrice != null){
+        el("bigPrice").textContent = "$" + mainPrice.toFixed(2);
+        const chgEl = el("priceChg");
+        if (state.lastPrice != null){
+          const diff = mainPrice - state.lastPrice;
+          const pct = (diff/state.lastPrice)*100;
+          chgEl.textContent = (diff>=0?"+":"") + diff.toFixed(2) + " (" + pct.toFixed(2) + "%)";
+          chgEl.className = "chg " + (diff>=0?"up":"down");
+        }
+        evaluatePriceAlarm(mainPrice);
+        state.prevPrice = state.lastPrice;
+        state.lastPrice = mainPrice;
+      }
+      el("statusDot").className = "status-dot live";
+      el("lastUpdate").textContent = "Ažurirano: " + new Date().toLocaleTimeString();
+    }catch(err){
+      el("statusDot").className = "status-dot error";
+      el("lastUpdate").textContent = "Greška: " + err.message;
+      addLog("Greška pri preuzimanju podataka: " + err.message, "warn");
+    }
+  }
+
+  // ---------- controls ----------
+  el("startBtn").addEventListener("click", ()=>{
+    if (state.running) return;
+    state.running = true;
+    el("startBtn").disabled = true;
+    el("stopBtn").disabled = false;
+    addLog("Praćenje pokrenuto.", null);
+    pollOnce();
+    const interval = parseInt(el("pollInterval").value,10);
+    state.timer = setInterval(pollOnce, interval);
+  });
+  el("stopBtn").addEventListener("click", ()=>{
+    state.running = false;
+    el("startBtn").disabled = false;
+    el("stopBtn").disabled = true;
+    clearInterval(state.timer);
+    el("statusDot").className = "status-dot";
+    addLog("Praćenje pauzirano.", null);
+  });
+  el("pollInterval").addEventListener("change", ()=>{
+    if (state.running){
+      clearInterval(state.timer);
+      state.timer = setInterval(pollOnce, parseInt(el("pollInterval").value,10));
+    }
+  });
+})();
+</script>
+</body>
+</html>
