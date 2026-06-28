@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ETH (Eterium) — Divergence Alarm</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --bg:#0b0f17; --panel:#111826; --panel2:#161f30; --border:#22304a;
@@ -138,6 +139,34 @@
 </div>
 
 <div class="panel">
+  <h2>📧 Email alarm (samo kad se divergencija potvrdi)</h2>
+  <div class="controls">
+    <div class="field">
+      <label for="emailTo">Email adresa primaoca</label>
+      <input type="email" id="emailTo" placeholder="tvoj@email.com">
+    </div>
+    <div class="field">
+      <label for="emailPublicKey">EmailJS Public Key</label>
+      <input type="text" id="emailPublicKey" placeholder="npr. AbCdEfGh123">
+    </div>
+    <div class="field">
+      <label for="emailServiceId">EmailJS Service ID</label>
+      <input type="text" id="emailServiceId" placeholder="npr. service_xxxx">
+    </div>
+    <div class="field">
+      <label for="emailTemplateId">EmailJS Template ID</label>
+      <input type="text" id="emailTemplateId" placeholder="npr. template_xxxx">
+    </div>
+    <button id="emailSaveBtn" class="secondary">💾 Sačuvaj email podešavanja</button>
+    <button id="emailTestBtn" class="secondary">✉️ Test email</button>
+  </div>
+  <div class="checks" style="margin-top:14px;">
+    <label><input type="checkbox" id="chkEmail" checked> Pošalji email kad se divergencija potvrdi</label>
+  </div>
+  <div class="sub" id="emailStatus" style="margin-top:10px; margin-bottom:0;">Podešavanja se čuvaju lokalno u browseru (localStorage).</div>
+</div>
+
+<div class="panel">
   <h2>Vremenski okviri</h2>
   <div class="grid" id="tfGrid"></div>
 </div>
@@ -259,12 +288,91 @@
     while (log.children.length > 100) log.removeChild(log.lastChild);
   }
 
-  function fireDivergenceAlarm(tf, message){
+  function fireDivergenceAlarm(tf, message, extra){
     addLog(message, "crit");
     alarmSound();
     notify("🚨 ETH Divergencija — " + tf.label, message);
     showBigBanner(message);
+    sendEmailAlert(tf, message, extra);
   }
+
+  // ---------- email alarm (EmailJS) ----------
+  const EMAIL_STORAGE_KEY = "ethDivergenceEmailConfig";
+  function loadEmailConfig(){
+    try{
+      const raw = localStorage.getItem(EMAIL_STORAGE_KEY);
+      if (!raw) return;
+      const cfg = JSON.parse(raw);
+      el("emailTo").value = cfg.to || "";
+      el("emailPublicKey").value = cfg.publicKey || "";
+      el("emailServiceId").value = cfg.serviceId || "";
+      el("emailTemplateId").value = cfg.templateId || "";
+    }catch(e){ /* ignore corrupt storage */ }
+  }
+  function saveEmailConfig(){
+    const cfg = {
+      to: el("emailTo").value.trim(),
+      publicKey: el("emailPublicKey").value.trim(),
+      serviceId: el("emailServiceId").value.trim(),
+      templateId: el("emailTemplateId").value.trim(),
+    };
+    localStorage.setItem(EMAIL_STORAGE_KEY, JSON.stringify(cfg));
+    el("emailStatus").textContent = "Email podešavanja sačuvana lokalno (" + new Date().toLocaleTimeString() + ").";
+    return cfg;
+  }
+  el("emailSaveBtn").addEventListener("click", saveEmailConfig);
+  loadEmailConfig();
+
+  function emailConfigReady(cfg){
+    return cfg.to && cfg.publicKey && cfg.serviceId && cfg.templateId;
+  }
+
+  async function sendEmailViaEmailJS(subject, message, params){
+    const cfg = {
+      to: el("emailTo").value.trim(),
+      publicKey: el("emailPublicKey").value.trim(),
+      serviceId: el("emailServiceId").value.trim(),
+      templateId: el("emailTemplateId").value.trim(),
+    };
+    if (!emailConfigReady(cfg)){
+      addLog("Email nije poslat — podešavanja (Public Key / Service ID / Template ID / adresa) nisu kompletna.", "warn");
+      return;
+    }
+    if (typeof emailjs === "undefined"){
+      addLog("Email nije poslat — EmailJS biblioteka nije učitana (provera internet konekcije).", "warn");
+      return;
+    }
+    try{
+      await emailjs.send(cfg.serviceId, cfg.templateId, {
+        to_email: cfg.to,
+        subject: subject,
+        message: message,
+        ...params,
+      }, { publicKey: cfg.publicKey });
+      addLog("Email alarm poslat na " + cfg.to + ".", null);
+    }catch(err){
+      addLog("Greška pri slanju email-a: " + (err && err.text ? err.text : err.message || err), "warn");
+    }
+  }
+
+  function sendEmailAlert(tf, message, extra){
+    if (!el("chkEmail").checked) return;
+    sendEmailViaEmailJS(
+      `ETH Divergencija (${tf.label}) — ${extra && extra.type === "bearish" ? "BEARISH" : "BULLISH"}`,
+      message,
+      {
+        timeframe: tf.label,
+        type: extra ? extra.type : "",
+        price: extra ? extra.price : "",
+        rsi: extra ? extra.rsi : "",
+      }
+    );
+  }
+
+  el("emailTestBtn").addEventListener("click", ()=>{
+    saveEmailConfig();
+    sendEmailViaEmailJS("ETH Divergence Alarm — test email", "Ovo je test poruka sa ETH divergence alarm stranice. Ako si je primio/la, podešavanje je ispravno.", { timeframe:"test", type:"test", price:"-", rsi:"-" });
+  });
 
   let bannerTimeout = null;
   function showBigBanner(message){
@@ -399,7 +507,7 @@
       const [a,b] = pivots.lows;
       if (closes[b] < closes[a] && rsi[b] > rsi[a]){
         const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(tf, `[${tf.label}] BULLISH divergencija potvrđena nakon oversold-a (${detail})`);
+        fireDivergenceAlarm(tf, `[${tf.label}] BULLISH divergencija potvrđena nakon oversold-a (${detail})`, { type:"bullish", price: closes[b], rsi: rsi[b] });
         setup.oversoldArmed = false;
         statusLabel = "BULLISH DIVERGENCIJA"; statusClass = "bull"; flagged = true;
       }
@@ -409,7 +517,7 @@
       const [a,b] = pivots.highs;
       if (closes[b] > closes[a] && rsi[b] < rsi[a]){
         const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(tf, `[${tf.label}] BEARISH divergencija potvrđena nakon overbought-a (${detail})`);
+        fireDivergenceAlarm(tf, `[${tf.label}] BEARISH divergencija potvrđena nakon overbought-a (${detail})`, { type:"bearish", price: closes[b], rsi: rsi[b] });
         setup.overboughtArmed = false;
         statusLabel = "BEARISH DIVERGENCIJA"; statusClass = "bear"; flagged = true;
       }
