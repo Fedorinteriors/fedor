@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ETH (Eterium) — Divergence Alarm</title>
+<title>ETH / BTC — Divergence Alarm</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
@@ -19,14 +19,15 @@
   h1{font-size:20px; margin:0 0 4px;}
   .sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
   .price-row{
-    display:flex; align-items:baseline; gap:16px; flex-wrap:wrap;
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
     background:var(--panel); border:1px solid var(--border); border-radius:12px;
     padding:16px 20px; margin-bottom:16px;
   }
-  .price-row .big{font-size:34px; font-weight:700;}
-  .price-row .chg{font-size:14px; font-weight:600; padding:2px 8px; border-radius:6px;}
+  .price-row .big{font-size:32px; font-weight:700;}
+  .price-row .chg{font-size:13px; font-weight:600; padding:2px 8px; border-radius:6px;}
   .chg.up{color:var(--green); background:rgba(39,209,127,.12);}
   .chg.down{color:var(--red); background:rgba(255,77,109,.12);}
+  .price-sep{width:1px; background:var(--border); align-self:stretch; margin:0 8px;}
   .meta{color:var(--muted); font-size:12px; margin-left:auto;}
   .panel{
     background:var(--panel); border:1px solid var(--border); border-radius:12px;
@@ -47,7 +48,7 @@
   button:hover{opacity:.85;}
   button.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--border);}
   button:disabled{opacity:.4; cursor:not-allowed;}
-  .status-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--muted); margin-right:6px;}
+  .status-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--muted); margin-right:6px; flex-shrink:0; align-self:center;}
   .status-dot.live{background:var(--green); box-shadow:0 0 8px var(--green);}
   .status-dot.error{background:var(--red); box-shadow:0 0 8px var(--red);}
   .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
@@ -70,6 +71,10 @@
   .badge.bear{background:rgba(255,77,109,.15); color:var(--red);}
   .badge.armed{background:rgba(255,182,72,.15); color:var(--amber);}
   .badge.none{background:rgba(142,160,189,.12); color:var(--muted);}
+  .asset-section{margin-bottom:22px;}
+  .asset-section:last-child{margin-bottom:0;}
+  .asset-header{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border);}
   #log{max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;}
   .log-entry{font-size:12.5px; padding:8px 10px; border-radius:7px; background:var(--panel2); border-left:3px solid var(--border); display:flex; justify-content:space-between; gap:10px;}
   .log-entry.crit{border-left-color:var(--red); background:rgba(255,77,109,.08);}
@@ -97,13 +102,18 @@
 <div id="flashOverlay"></div>
 <div id="bigAlertBanner"></div>
 
-<h1>ETH (Eterium) — Divergence Alarm</h1>
-<div class="sub">Jedini alarm: RSI/cena divergencija na 15 min / 30 min / 1 h, nakon prethodnog probijanja RSI ekstrema. Podaci: Binance public API (ETHUSDT).</div>
+<h1>ETH / BTC — Divergence Alarm</h1>
+<div class="sub">Alarm: RSI/cena divergencija na 15 min / 30 min / 1 h, nakon prethodnog probijanja RSI ekstrema. Podaci: Binance public API (ETHUSDT, BTCUSDT).</div>
 
 <div class="price-row">
   <span class="status-dot" id="statusDot"></span>
-  <span id="bigPrice" class="big">—</span>
-  <span id="priceChg" class="chg">—</span>
+  <span style="color:var(--blue);font-size:12px;font-weight:700;align-self:center;">ETH</span>
+  <span id="bigPriceETHUSDT" class="big">—</span>
+  <span id="priceChgETHUSDT" class="chg">—</span>
+  <span class="price-sep"></span>
+  <span style="color:var(--amber);font-size:12px;font-weight:700;align-self:center;">BTC</span>
+  <span id="bigPriceBTCUSDT" class="big" style="color:var(--amber)">—</span>
+  <span id="priceChgBTCUSDT" class="chg">—</span>
   <span class="meta" id="lastUpdate">Nije pokrenuto</span>
 </div>
 
@@ -111,11 +121,11 @@
   <h2>Podešavanja alarma</h2>
   <div class="controls">
     <div class="field">
-      <label for="rsiOversold">RSI prag preprodatosti (oversold) — okida bullish setup</label>
+      <label for="rsiOversold">RSI oversold prag — ETH (BTC fiksno: 21)</label>
       <input type="number" id="rsiOversold" value="30" min="1" max="50">
     </div>
     <div class="field">
-      <label for="rsiOverbought">RSI prag prekupljenosti (overbought) — okida bearish setup</label>
+      <label for="rsiOverbought">RSI overbought prag — ETH (BTC fiksno: 74)</label>
       <input type="number" id="rsiOverbought" value="70" min="50" max="99">
     </div>
     <div class="field">
@@ -168,7 +178,7 @@
 
 <div class="panel">
   <h2>Vremenski okviri</h2>
-  <div class="grid" id="tfGrid"></div>
+  <div id="assetSections"></div>
 </div>
 
 <div class="panel">
@@ -177,52 +187,78 @@
 </div>
 
 <footer>
-  Pravilo alarma (po svakom vremenskom okviru, nezavisno):<br>
-  • <b>Bullish</b>: RSI prvo padne ispod praga preprodatosti → setup se "naoruža". Tek nakon toga, ako cena formira niži low a RSI u istom trenutku formira viši low (klasična bullish divergencija), oglašava se alarm. Setup se tad razoružava i čeka novi probijaj ispod praga.<br>
+  Pravilo alarma (po svakom vremenskom okviru i paru, nezavisno):<br>
+  • <b>Bullish</b>: RSI prvo padne ispod praga preprodatosti → setup se "naoruža". Tek nakon toga, ako cena formira niži low a RSI u istom trenutku formira viši low (klasična bullish divergencija), oglašava se alarm.<br>
   • <b>Bearish</b>: zrcalno — RSI prvo ode iznad praga prekupljenosti → setup se naoruža, pa kad cena formira viši high a RSI niži high, oglašava se alarm.<br>
-  Podaci se povlače direktno iz browsera sa Binance public API-ja (api.binance.com) za par ETHUSDT — bez API ključa, bez servera. Detekcija pivota je pojednostavljena heuristika, nije finansijski savet.
-  Stranica mora ostati otvorena u browseru da bi alarmi radili; za alarme u pozadini omogućite notifikacije.
+  Podaci se povlače direktno iz browsera sa Binance public API-ja (api.binance.com) za parove ETHUSDT i BTCUSDT — bez API ključa, bez servera. Detekcija pivota je pojednostavljena heuristika, nije finansijski savet.
 </footer>
 
 <script>
 (function(){
   "use strict";
 
-  const SYMBOL = "ETHUSDT";
-  const TIMEFRAMES = [
-    { key:"15m", label:"15 min", binanceInterval:"15m" },
-    { key:"30m", label:"30 min", binanceInterval:"30m" },
-    { key:"1h",  label:"1 sat",  binanceInterval:"1h"  },
+  const ASSETS = [
+    { symbol:"ETHUSDT", label:"ETH", name:"Eterium", color:"var(--blue)", timeframes:[
+      { key:"15m", label:"15 min", binanceInterval:"15m" },
+      { key:"30m", label:"30 min", binanceInterval:"30m" },
+      { key:"1h",  label:"1 sat",  binanceInterval:"1h"  },
+    ]},
+    { symbol:"BTCUSDT", label:"BTC", name:"Bitcoin", color:"var(--amber)", oversold:21, overbought:74, timeframes:[
+      { key:"15m", label:"15 min", binanceInterval:"15m" },
+      { key:"30m", label:"30 min", binanceInterval:"30m" },
+      { key:"1h",  label:"1 sat",  binanceInterval:"1h"  },
+    ]},
   ];
 
   const state = {
     running:false,
     timer:null,
-    lastPrice:null,
-    setups:{}, // key -> { oversoldArmed:bool, overboughtArmed:bool }
+    lastPrice:{},
+    setups:{},
   };
-  TIMEFRAMES.forEach(tf=> state.setups[tf.key] = { oversoldArmed:false, overboughtArmed:false });
+  ASSETS.forEach(asset => {
+    state.lastPrice[asset.symbol] = null;
+    asset.timeframes.forEach(tf => {
+      state.setups[asset.symbol+"-"+tf.key] = { oversoldArmed:false, overboughtArmed:false };
+    });
+  });
 
   // ---------- DOM ----------
   const el = (id)=>document.getElementById(id);
-  const grid = el("tfGrid");
   const log = el("log");
   const flashOverlay = el("flashOverlay");
   const bigBanner = el("bigAlertBanner");
 
-  TIMEFRAMES.forEach(tf=>{
-    const card = document.createElement("div");
-    card.className = "tf-card";
-    card.id = "card-"+tf.key;
-    card.innerHTML = `
-      <h3>${tf.label}</h3>
-      <div class="row"><span class="lbl">Cena</span><span class="val" id="price-${tf.key}">—</span></div>
-      <div class="row"><span class="lbl">RSI(14)</span><span class="val" id="rsi-${tf.key}">—</span></div>
-      <div class="bar-track"><div class="bar-fill" id="rsibar-${tf.key}" style="width:0%;background:var(--blue);"></div></div>
-      <div id="status-${tf.key}"><span class="badge none">Neutralno</span></div>
-      <canvas class="spark" id="spark-${tf.key}"></canvas>
-    `;
-    grid.appendChild(card);
+  const assetSections = el("assetSections");
+  ASSETS.forEach(asset => {
+    const section = document.createElement("div");
+    section.className = "asset-section";
+    const header = document.createElement("div");
+    header.className = "asset-header";
+    header.style.color = asset.color;
+    header.textContent = asset.label + " — " + asset.name +
+      (asset.oversold != null ? `  (RSI prag: <${asset.oversold} / >${asset.overbought})` : "");
+    section.appendChild(header);
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    grid.id = "grid-" + asset.symbol;
+    section.appendChild(grid);
+    assetSections.appendChild(section);
+
+    asset.timeframes.forEach(tf => {
+      const card = document.createElement("div");
+      card.className = "tf-card";
+      card.id = "card-" + asset.symbol + "-" + tf.key;
+      card.innerHTML = `
+        <h3>${tf.label}</h3>
+        <div class="row"><span class="lbl">Cena</span><span class="val" id="price-${asset.symbol}-${tf.key}">—</span></div>
+        <div class="row"><span class="lbl">RSI(14)</span><span class="val" id="rsi-${asset.symbol}-${tf.key}">—</span></div>
+        <div class="bar-track"><div class="bar-fill" id="rsibar-${asset.symbol}-${tf.key}" style="width:0%;background:var(--blue);"></div></div>
+        <div id="status-${asset.symbol}-${tf.key}"><span class="badge none">Neutralno</span></div>
+        <canvas class="spark" id="spark-${asset.symbol}-${tf.key}"></canvas>
+      `;
+      grid.appendChild(card);
+    });
   });
 
   // ---------- audio ----------
@@ -240,14 +276,14 @@
       gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration/1000);
       osc.connect(gain).connect(audioCtx.destination);
       osc.start(t0); osc.stop(t0+duration/1000+0.05);
-    }catch(e){ /* ignore audio errors (autoplay policies etc.) */ }
+    }catch(e){}
   }
   function alarmSound(){
     beep(1100,220,"square",0); beep(1400,220,"square",0.25); beep(1100,260,"square",0.5);
   }
   el("testSoundBtn").addEventListener("click", alarmSound);
 
-  // ---------- save page locally (works even inside a sandboxed in-app preview) ----------
+  // ---------- save page locally ----------
   el("saveBtn").addEventListener("click", ()=>{
     try{
       const html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
@@ -260,9 +296,9 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(url), 5000);
-      addLog("Stranica sačuvana (download pokrenut). Otvori sačuvani fajl u pravom browser tabu da bi alarmi radili.", null);
+      addLog("Stranica sačuvana (download pokrenut).", null);
     }catch(e){
-      alert("Čuvanje nije uspelo u ovom okruženju: " + e.message + "\nProbaj da otvoriš link na GitHub-u i preuzmeš fajl odatle.");
+      alert("Čuvanje nije uspelo: " + e.message);
     }
   });
 
@@ -288,12 +324,13 @@
     while (log.children.length > 100) log.removeChild(log.lastChild);
   }
 
-  function fireDivergenceAlarm(tf, message, extra){
+  // ---------- alarm ----------
+  function fireDivergenceAlarm(asset, tf, message, extra){
     addLog(message, "crit");
     alarmSound();
-    notify("🚨 ETH Divergencija — " + tf.label, message);
+    notify("🚨 " + asset.label + " Divergencija — " + tf.label, message);
     showBigBanner(message);
-    sendEmailAlert(tf, message, extra);
+    sendEmailAlert(asset, tf, message, extra);
   }
 
   // ---------- email alarm (EmailJS) ----------
@@ -307,7 +344,7 @@
       el("emailPublicKey").value = cfg.publicKey || "";
       el("emailServiceId").value = cfg.serviceId || "";
       el("emailTemplateId").value = cfg.templateId || "";
-    }catch(e){ /* ignore corrupt storage */ }
+    }catch(e){}
   }
   function saveEmailConfig(){
     const cfg = {
@@ -335,11 +372,11 @@
       templateId: el("emailTemplateId").value.trim(),
     };
     if (!emailConfigReady(cfg)){
-      addLog("Email nije poslat — podešavanja (Public Key / Service ID / Template ID / adresa) nisu kompletna.", "warn");
+      addLog("Email nije poslat — podešavanja nisu kompletna.", "warn");
       return;
     }
     if (typeof emailjs === "undefined"){
-      addLog("Email nije poslat — EmailJS biblioteka nije učitana (provera internet konekcije).", "warn");
+      addLog("Email nije poslat — EmailJS biblioteka nije učitana.", "warn");
       return;
     }
     try{
@@ -355,10 +392,10 @@
     }
   }
 
-  function sendEmailAlert(tf, message, extra){
+  function sendEmailAlert(asset, tf, message, extra){
     if (!el("chkEmail").checked) return;
     sendEmailViaEmailJS(
-      `ETH Divergencija (${tf.label}) — ${extra && extra.type === "bearish" ? "BEARISH" : "BULLISH"}`,
+      `${asset.label} Divergencija (${tf.label}) — ${extra && extra.type === "bearish" ? "BEARISH" : "BULLISH"}`,
       message,
       {
         timeframe: tf.label,
@@ -371,7 +408,7 @@
 
   el("emailTestBtn").addEventListener("click", ()=>{
     saveEmailConfig();
-    sendEmailViaEmailJS("ETH Divergence Alarm — test email", "Ovo je test poruka sa ETH divergence alarm stranice. Ako si je primio/la, podešavanje je ispravno.", { timeframe:"test", type:"test", price:"-", rsi:"-" });
+    sendEmailViaEmailJS("ETH/BTC Divergence Alarm — test email", "Ovo je test poruka sa ETH/BTC divergence alarm stranice. Ako si je primio/la, podešavanje je ispravno.", { timeframe:"test", type:"test", price:"-", rsi:"-" });
   });
 
   let bannerTimeout = null;
@@ -409,7 +446,7 @@
     return out;
   }
 
-  // pivot lows/highs in price (confirmed pivotWindow bars on each side), paired with RSI at same index
+  // pivot lows/highs in price, paired with RSI at same index
   function findPivots(closes, rsi, lookback=80, pivotWindow=2, minSeparation=3){
     const n = closes.length;
     const start = Math.max(pivotWindow, n-lookback);
@@ -435,8 +472,8 @@
   }
 
   // ---------- fetch ----------
-  async function fetchKlines(interval, limit){
-    const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${interval}&limit=${limit}`;
+  async function fetchKlines(symbol, interval, limit){
+    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error("Binance API error " + res.status);
     const raw = await res.json();
@@ -471,8 +508,8 @@
   function fmt(n, d=2){ return (n==null || isNaN(n)) ? "—" : n.toFixed(d); }
 
   // ---------- per-timeframe processing ----------
-  async function processTimeframe(tf){
-    const candles = await fetchKlines(tf.binanceInterval, 300);
+  async function processTimeframe(asset, tf){
+    const candles = await fetchKlines(asset.symbol, tf.binanceInterval, 300);
     if (candles.length < 35) return null;
 
     const closes = candles.map(c=>c.close);
@@ -480,19 +517,18 @@
     const lastClose = closes[closes.length-1];
     const lastRSI = rsi[rsi.length-1];
 
-    const rsiOversold = parseFloat(el("rsiOversold").value || 30);
-    const rsiOverbought = parseFloat(el("rsiOverbought").value || 70);
-    const setup = state.setups[tf.key];
+    const rsiOversold = asset.oversold != null ? asset.oversold : parseFloat(el("rsiOversold").value || 30);
+    const rsiOverbought = asset.overbought != null ? asset.overbought : parseFloat(el("rsiOverbought").value || 70);
+    const setup = state.setups[asset.symbol+"-"+tf.key];
 
-    // arm setups on RSI crossing the extreme thresholds
     if (lastRSI != null){
       if (lastRSI < rsiOversold && !setup.oversoldArmed){
         setup.oversoldArmed = true;
-        addLog(`[${tf.label}] RSI ${lastRSI.toFixed(1)} ispod ${rsiOversold} — bullish setup naoružan, čeka se divergencija.`, null);
+        addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} ispod ${rsiOversold} — bullish setup naoružan, čeka se divergencija.`, null);
       }
       if (lastRSI > rsiOverbought && !setup.overboughtArmed){
         setup.overboughtArmed = true;
-        addLog(`[${tf.label}] RSI ${lastRSI.toFixed(1)} iznad ${rsiOverbought} — bearish setup naoružan, čeka se divergencija.`, null);
+        addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} iznad ${rsiOverbought} — bearish setup naoružan, čeka se divergencija.`, null);
       }
     }
 
@@ -502,64 +538,63 @@
     if (setup.oversoldArmed) { statusLabel = "Bullish setup aktivan (čeka divergenciju)"; statusClass = "armed"; }
     if (setup.overboughtArmed) { statusLabel = "Bearish setup aktivan (čeka divergenciju)"; statusClass = "armed"; }
 
-    // bullish divergence: price lower low, RSI higher low — only counts while armed
     if (setup.oversoldArmed && pivots.lows.length === 2){
       const [a,b] = pivots.lows;
       if (closes[b] < closes[a] && rsi[b] > rsi[a]){
         const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(tf, `[${tf.label}] BULLISH divergencija potvrđena nakon oversold-a (${detail})`, { type:"bullish", price: closes[b], rsi: rsi[b] });
+        fireDivergenceAlarm(asset, tf, `[${asset.label} ${tf.label}] BULLISH divergencija potvrđena nakon oversold-a (${detail})`, { type:"bullish", price: closes[b], rsi: rsi[b] });
         setup.oversoldArmed = false;
         statusLabel = "BULLISH DIVERGENCIJA"; statusClass = "bull"; flagged = true;
       }
     }
-    // bearish divergence: price higher high, RSI lower high — only counts while armed
     if (setup.overboughtArmed && pivots.highs.length === 2){
       const [a,b] = pivots.highs;
       if (closes[b] > closes[a] && rsi[b] < rsi[a]){
         const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(tf, `[${tf.label}] BEARISH divergencija potvrđena nakon overbought-a (${detail})`, { type:"bearish", price: closes[b], rsi: rsi[b] });
+        fireDivergenceAlarm(asset, tf, `[${asset.label} ${tf.label}] BEARISH divergencija potvrđena nakon overbought-a (${detail})`, { type:"bearish", price: closes[b], rsi: rsi[b] });
         setup.overboughtArmed = false;
         statusLabel = "BEARISH DIVERGENCIJA"; statusClass = "bear"; flagged = true;
       }
     }
 
-    renderTimeframe(tf, { lastClose, lastRSI, closes, statusLabel, statusClass, flagged });
+    renderTimeframe(asset, tf, { lastClose, lastRSI, closes, statusLabel, statusClass, flagged });
     return lastClose;
   }
 
-  function renderTimeframe(tf, d){
-    el(`price-${tf.key}`).textContent = "$" + fmt(d.lastClose);
-    const rsiEl = el(`rsi-${tf.key}`);
+  function renderTimeframe(asset, tf, d){
+    el(`price-${asset.symbol}-${tf.key}`).textContent = "$" + fmt(d.lastClose);
+    const rsiEl = el(`rsi-${asset.symbol}-${tf.key}`);
     rsiEl.textContent = fmt(d.lastRSI,1);
     rsiEl.className = "val " + (d.lastRSI<30 ? "green" : d.lastRSI>70 ? "red" : "");
-    const bar = el(`rsibar-${tf.key}`);
+    const bar = el(`rsibar-${asset.symbol}-${tf.key}`);
     bar.style.width = Math.min(100,Math.max(0,d.lastRSI||0)) + "%";
     bar.style.background = d.lastRSI<30 ? "var(--green)" : d.lastRSI>70 ? "var(--red)" : "var(--blue)";
-
-    el(`status-${tf.key}`).innerHTML = `<span class="badge ${d.statusClass}">${d.statusLabel}</span>`;
-    drawSpark(`spark-${tf.key}`, d.closes.slice(-60));
-
-    el(`card-${tf.key}`).classList.toggle("alert", d.flagged);
+    el(`status-${asset.symbol}-${tf.key}`).innerHTML = `<span class="badge ${d.statusClass}">${d.statusLabel}</span>`;
+    drawSpark(`spark-${asset.symbol}-${tf.key}`, d.closes.slice(-60));
+    el(`card-${asset.symbol}-${tf.key}`).classList.toggle("alert", d.flagged);
   }
 
   // ---------- main poll ----------
   async function pollOnce(){
     try{
-      let mainPrice = null;
-      for (const tf of TIMEFRAMES){
-        const lastClose = await processTimeframe(tf);
-        if (tf.key === "15m" && lastClose != null) mainPrice = lastClose;
-      }
-      if (mainPrice != null){
-        el("bigPrice").textContent = "$" + mainPrice.toFixed(2);
-        const chgEl = el("priceChg");
-        if (state.lastPrice != null){
-          const diff = mainPrice - state.lastPrice;
-          const pct = (diff/state.lastPrice)*100;
-          chgEl.textContent = (diff>=0?"+":"") + diff.toFixed(2) + " (" + pct.toFixed(2) + "%)";
-          chgEl.className = "chg " + (diff>=0?"up":"down");
+      for (const asset of ASSETS){
+        let assetPrice = null;
+        for (const tf of asset.timeframes){
+          const lastClose = await processTimeframe(asset, tf);
+          if (tf.key === "15m" && lastClose != null) assetPrice = lastClose;
         }
-        state.lastPrice = mainPrice;
+        if (assetPrice != null){
+          const bigPriceEl = el("bigPrice" + asset.symbol);
+          const priceChgEl = el("priceChg" + asset.symbol);
+          bigPriceEl.textContent = "$" + assetPrice.toFixed(2);
+          if (state.lastPrice[asset.symbol] != null){
+            const diff = assetPrice - state.lastPrice[asset.symbol];
+            const pct = (diff/state.lastPrice[asset.symbol])*100;
+            priceChgEl.textContent = (diff>=0?"+":"") + diff.toFixed(2) + " (" + pct.toFixed(2) + "%)";
+            priceChgEl.className = "chg " + (diff>=0?"up":"down");
+          }
+          state.lastPrice[asset.symbol] = assetPrice;
+        }
       }
       el("statusDot").className = "status-dot live";
       el("lastUpdate").textContent = "Ažurirano: " + new Date().toLocaleTimeString();
@@ -576,7 +611,7 @@
     state.running = true;
     el("startBtn").disabled = true;
     el("stopBtn").disabled = false;
-    addLog("Praćenje pokrenuto.", null);
+    addLog("Praćenje pokrenuto (ETH + BTC).", null);
     pollOnce();
     const interval = parseInt(el("pollInterval").value,10);
     state.timer = setInterval(pollOnce, interval);
