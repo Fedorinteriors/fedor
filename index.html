@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surčin Info — Vesti, događaji i projekti opštine Surčin</title>
+<meta name="description" content="Surčin Info je portal sa vestima, informacijama o događajima, servisnim informacijama, praćenjem velikih projekata i najavama za opštinu Surčin.">
+<link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader-mark">
+    <span></span><span></span><span></span>
+  </div>
+  <p>Surčin Info se učitava...</p>
+</div>
+
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a href="#top" class="logo">
+      <span class="logo-mark">SI</span>
+      <span class="logo-text">Surčin<em>Info</em></span>
+    </a>
+
+    <nav class="main-nav" id="mainNav">
+      <ul>
+        <li><a href="#vesti" class="nav-link">Vesti</a></li>
+        <li><a href="#dogadjaji" class="nav-link">Događaji</a></li>
+        <li><a href="#projekti" class="nav-link">Projekti</a></li>
+        <li><a href="#servis" class="nav-link">Servisne info</a></li>
+        <li><a href="#najave" class="nav-link">Najave</a></li>
+        <li><a href="#kontakt" class="nav-link">Kontakt</a></li>
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <button class="theme-toggle" id="themeToggle" aria-label="Promeni temu">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+      <button class="hamburger" id="hamburger" aria-label="Otvori meni" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="live-ticker" aria-label="Aktuelne najave">
+    <div class="live-ticker-track" id="tickerTrack">
+      <!-- filled by JS, duplicated for seamless loop -->
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-blobs" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="blob blob-c"></span>
+    </div>
+    <div class="container hero-inner">
+      <div class="hero-copy reveal" data-reveal>
+        <span class="eyebrow">Portal lokalne zajednice</span>
+        <h1>Sve o <span class="text-gradient">Surčinu</span> na jednom mestu.</h1>
+        <p class="hero-lead">Vesti, događaji, servisne informacije i praćenje velikih infrastrukturnih projekata — ažurno, pregledno i na jednom mestu za sve meštane Surčina.</p>
+        <div class="hero-actions">
+          <a href="#vesti" class="btn btn-primary">
+            <span>Najnovije vesti</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="#projekti" class="btn btn-ghost">Prati projekte</a>
+        </div>
+        <div class="hero-stats" id="heroStats">
+          <div class="stat">
+            <span class="stat-num" data-count="43000">0</span>
+            <span class="stat-label">stanovnika opštine</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-count="12">0</span>
+            <span class="stat-label">aktivnih projekata</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-count="27">0</span>
+            <span class="stat-label">događaja ove godine</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" data-count="8">0</span>
+            <span class="stat-label">mesnih zajednica</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual reveal" data-reveal data-reveal-delay="150">
+        <img src="assets/img/hero-illustration.svg" alt="Ilustracija naselja Surčin uz obalu reke" loading="eager">
+        <div class="floating-card card-news">
+          <span class="dot dot-live"></span> Vesti se ažuriraju uživo
+        </div>
+        <div class="floating-card card-weather">
+          ☀️ 27°C · Surčin danas
+        </div>
+      </div>
+    </div>
+    <a href="#vesti" class="scroll-cue" aria-label="Skroluj nadole">
+      <span></span>
+    </a>
+  </section>
+
+  <!-- ============ VESTI ============ -->
+  <section class="section" id="vesti">
+    <div class="container">
+      <div class="section-head reveal" data-reveal>
+        <div>
+          <span class="eyebrow">Aktuelno</span>
+          <h2>Najnovije vesti</h2>
+        </div>
+        <p class="section-desc">Pregled najvažnijih dešavanja u Surčinu — od infrastrukture do kulture i sporta.</p>
+      </div>
+
+      <div class="filter-bar reveal" data-reveal>
+        <button class="filter-chip is-active" data-filter="sve">Sve</button>
+        <button class="filter-chip" data-filter="infrastruktura">Infrastruktura</button>
+        <button class="filter-chip" data-filter="zivotna-sredina">Životna sredina</button>
+        <button class="filter-chip" data-filter="kultura">Kultura</button>
+        <button class="filter-chip" data-filter="sport">Sport</button>
+      </div>
+
+      <div class="news-grid" id="newsGrid">
+
+        <article class="news-card is-featured reveal" data-reveal data-category="infrastruktura">
+          <div class="news-media">
+            <img src="assets/img/news-1.svg" alt="Radovi na rekonstrukciji ulice" loading="lazy">
+            <span class="tag tag-infrastruktura">Infrastruktura</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-28">28. jun 2026.</time>
+            <h3>Počela rekonstrukcija glavne saobraćajnice kroz centar Surčina</h3>
+            <p>Radovi obuhvataju novi asfaltni sloj, proširenje trotoara i uvođenje LED javne rasvete na deonici dugoj 1,8 km. Saobraćaj je preusmeren na alternativne pravce.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+        <article class="news-card reveal" data-reveal data-category="zivotna-sredina">
+          <div class="news-media">
+            <img src="assets/img/news-2.svg" alt="Zelena površina i pošumljavanje" loading="lazy">
+            <span class="tag tag-zivotna-sredina">Životna sredina</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-24">24. jun 2026.</time>
+            <h3>Zasađeno 300 novih sadnica u parku pored Save</h3>
+            <p>Akcija ozelenjavanja okupila je meštane, lokalna udruženja i učenike osnovnih škola u zajedničkom uređenju priobalja.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+        <article class="news-card reveal" data-reveal data-category="kultura">
+          <div class="news-media">
+            <img src="assets/img/news-3.svg" alt="Dom kulture Surčin" loading="lazy">
+            <span class="tag tag-kultura">Kultura</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-20">20. jun 2026.</time>
+            <h3>Dom kulture najavljuje program za letnju sezonu</h3>
+            <p>Koncerti, filmske projekcije na otvorenom i izložbe lokalnih umetnika biće organizovani svakog vikenda tokom jula i avgusta.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+        <article class="news-card reveal" data-reveal data-category="sport">
+          <div class="news-media">
+            <img src="assets/img/news-4.svg" alt="Sportski turnir" loading="lazy">
+            <span class="tag tag-sport">Sport</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-15">15. jun 2026.</time>
+            <h3>Održan tradicionalni malonogometni turnir „Surčin kup“</h3>
+            <p>Učestvovalo je 16 ekipa iz svih mesnih zajednica. Pobednički pehar odneo je tim „Reka“ posle uzbudljivog finala.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+        <article class="news-card reveal" data-reveal data-category="infrastruktura">
+          <div class="news-media">
+            <img src="assets/img/project-2.svg" alt="Radovi na vodovodnoj mreži" loading="lazy">
+            <span class="tag tag-infrastruktura">Infrastruktura</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-10">10. jun 2026.</time>
+            <h3>Proširenje vodovodne mreže u naselju Bečmen</h3>
+            <p>Postavljeno je 2,3 km nove vodovodne cevi, čime je poboljšan pritisak i kvalitet vodosnabdevanja za oko 400 domaćinstava.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+        <article class="news-card reveal" data-reveal data-category="zivotna-sredina">
+          <div class="news-media">
+            <img src="assets/img/news-2.svg" alt="Reciklažno ostrvo" loading="lazy">
+            <span class="tag tag-zivotna-sredina">Životna sredina</span>
+          </div>
+          <div class="news-body">
+            <time datetime="2026-06-05">5. jun 2026.</time>
+            <h3>Postavljena nova reciklažna ostrva u tri naselja</h3>
+            <p>Meštani sada mogu odvojeno da odlažu papir, plastiku i staklo na sedam novih lokacija širom opštine.</p>
+            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="section-footer reveal" data-reveal>
+        <button class="btn btn-outline" id="loadMoreBtn">Prikaži još vesti</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOGAĐAJI ============ -->
+  <section class="section section-alt" id="dogadjaji">
+    <div class="container">
+      <div class="section-head reveal" data-reveal>
+        <div>
+          <span class="eyebrow">Kalendar</span>
+          <h2>Info o događajima</h2>
+        </div>
+        <p class="section-desc">Ne propustite dešavanja u vašoj mesnoj zajednici — od sajmova do sportskih manifestacija.</p>
+      </div>
+
+      <div class="next-event-banner reveal" data-reveal>
+        <div class="next-event-info">
+          <span class="eyebrow eyebrow-light">Sledeći veliki događaj</span>
+          <h3>Surčinski letnji sajam i vašar</h3>
+          <p>Glavni trg Surčina · Nastupi lokalnih izvođača, prezentacija poljoprivrednih proizvoda i zabavni sadržaj za decu.</p>
+        </div>
+        <div class="countdown" id="countdown" data-target="2026-07-18T18:00:00">
+          <div class="countdown-item"><span class="cd-num" data-cd="days">00</span><span class="cd-label">dana</span></div>
+          <div class="countdown-item"><span class="cd-num" data-cd="hours">00</span><span class="cd-label">sati</span></div>
+          <div class="countdown-item"><span class="cd-num" data-cd="minutes">00</span><span class="cd-label">min</span></div>
+          <div class="countdown-item"><span class="cd-num" data-cd="seconds">00</span><span class="cd-label">sek</span></div>
+        </div>
+      </div>
+
+      <div class="events-grid">
+
+        <article class="event-card reveal" data-reveal>
+          <div class="event-date">
+            <span class="ed-day">18</span>
+            <span class="ed-month">JUL</span>
+          </div>
+          <img src="assets/img/event-1.svg" alt="Letnji sajam" class="event-thumb" loading="lazy">
+          <div class="event-body">
+            <h3>Surčinski letnji sajam i vašar</h3>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Glavni trg, Surčin</p>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 18:00h</p>
+          </div>
+        </article>
+
+        <article class="event-card reveal" data-reveal>
+          <div class="event-date">
+            <span class="ed-day">25</span>
+            <span class="ed-month">JUL</span>
+          </div>
+          <img src="assets/img/news-4.svg" alt="Turnir u malom fudbalu" class="event-thumb" loading="lazy">
+          <div class="event-body">
+            <h3>Noćni turnir u malom fudbalu</h3>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Sportski centar Surčin</p>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 20:00h</p>
+          </div>
+        </article>
+
+        <article class="event-card reveal" data-reveal>
+          <div class="event-date">
+            <span class="ed-day">02</span>
+            <span class="ed-month">AVG</span>
+          </div>
+          <img src="assets/img/news-3.svg" alt="Bioskop na otvorenom" class="event-thumb" loading="lazy">
+          <div class="event-body">
+            <h3>Filmske večeri na otvorenom</h3>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Dvorište Doma kulture</p>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 21:00h</p>
+          </div>
+        </article>
+
+        <article class="event-card reveal" data-reveal>
+          <div class="event-date">
+            <span class="ed-day">15</span>
+            <span class="ed-month">AVG</span>
+          </div>
+          <img src="assets/img/news-2.svg" alt="Ekološka akcija" class="event-thumb" loading="lazy">
+          <div class="event-body">
+            <h3>Akcija čišćenja obale Save</h3>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Priobalje, Surčin</p>
+            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 09:00h</p>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROJEKTI ============ -->
+  <section class="section" id="projekti">
+    <div class="container">
+      <div class="section-head reveal" data-reveal>
+        <div>
+          <span class="eyebrow">U toku</span>
+          <h2>Praćenje velikih projekata</h2>
+        </div>
+        <p class="section-desc">Transparentan pregled statusa infrastrukturnih i javnih projekata u opštini.</p>
+      </div>
+
+      <div class="projects-list">
+
+        <article class="project-card reveal" data-reveal>
+          <div class="project-media">
+            <img src="assets/img/project-1.svg" alt="Izgradnja mosta i saobraćajnice" loading="lazy">
+            <span class="status-badge status-progress">U toku</span>
+          </div>
+          <div class="project-body">
+            <h3>Izgradnja obilaznice oko naseljenog mesta</h3>
+            <p>Nova saobraćajnica dužine 4,2 km rasteretiće centar naselja od tranzitnog saobraćaja i povezati industrijsku zonu sa autoputem.</p>
+            <div class="project-progress">
+              <div class="progress-track"><div class="progress-fill" data-progress="68"></div></div>
+              <span class="progress-value">68%</span>
+            </div>
+            <div class="project-meta">
+              <span><strong>Rok:</strong> Q4 2026.</span>
+              <span><strong>Budžet:</strong> 4,8 miliona €</span>
+              <span><strong>Izvođač:</strong> JP Putevi Beograd</span>
+            </div>
+            <ol class="project-phases">
+              <li class="is-done">Projektovanje</li>
+              <li class="is-done">Pripremni radovi</li>
+              <li class="is-active">Izgradnja kolovoza</li>
+              <li>Signalizacija i puštanje u rad</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="project-card reveal" data-reveal>
+          <div class="project-media">
+            <img src="assets/img/project-2.svg" alt="Rekonstrukcija kanalizacione mreže" loading="lazy">
+            <span class="status-badge status-progress">U toku</span>
+          </div>
+          <div class="project-body">
+            <h3>Rekonstrukcija kanalizacione i vodovodne mreže</h3>
+            <p>Zamena zastarelih cevi u naselju Bečmen i Jakovo radi sprečavanja poplava i poboljšanja kvaliteta vode.</p>
+            <div class="project-progress">
+              <div class="progress-track"><div class="progress-fill" data-progress="42"></div></div>
+              <span class="progress-value">42%</span>
+            </div>
+            <div class="project-meta">
+              <span><strong>Rok:</strong> Q1 2027.</span>
+              <span><strong>Budžet:</strong> 2,1 milion €</span>
+              <span><strong>Izvođač:</strong> JKP Vodovod i kanalizacija</span>
+            </div>
+            <ol class="project-phases">
+              <li class="is-done">Projektovanje</li>
+              <li class="is-active">Zamena cevovoda</li>
+              <li>Asfaltiranje</li>
+              <li>Tehnički prijem</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="project-card reveal" data-reveal>
+          <div class="project-media">
+            <img src="assets/img/project-3.svg" alt="Izgradnja nove škole" loading="lazy">
+            <span class="status-badge status-planned">Planirano</span>
+          </div>
+          <div class="project-body">
+            <h3>Izgradnja nove osnovne škole</h3>
+            <p>Nova škola kapaciteta 720 učenika sa sportskom dvoranom i savremenim kabinetima, planirana zbog rasta broja stanovnika.</p>
+            <div class="project-progress">
+              <div class="progress-track"><div class="progress-fill" data-progress="12"></div></div>
+              <span class="progress-value">12%</span>
+            </div>
+            <div class="project-meta">
+              <span><strong>Rok:</strong> Q3 2028.</span>
+              <span><strong>Budžet:</strong> 9,5 miliona €</span>
+              <span><strong>Investitor:</strong> Grad Beograd</span>
+            </div>
+            <ol class="project-phases">
+              <li class="is-active">Idejni projekat</li>
+              <li>Dobijanje dozvola</li>
+              <li>Izgradnja</li>
+              <li>Opremanje</li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="project-card reveal" data-reveal>
+          <div class="project-media">
+            <img src="assets/img/project-1.svg" alt="Pešačko-biciklistička staza" loading="lazy">
+            <span class="status-badge status-done">Završeno</span>
+          </div>
+          <div class="project-body">
+            <h3>Pešačko-biciklistička staza uz obalu Save</h3>
+            <p>Staza dužine 3 km povezuje centar Surčina sa priobaljem, sa osvetljenjem i mobilijarom za odmor.</p>
+            <div class="project-progress">
+              <div class="progress-track"><div class="progress-fill" data-progress="100"></div></div>
+              <span class="progress-value">100%</span>
+            </div>
+            <div class="project-meta">
+              <span><strong>Završeno:</strong> Maj 2026.</span>
+              <span><strong>Budžet:</strong> 780.000 €</span>
+              <span><strong>Izvođač:</strong> Zelenilo Beograd</span>
+            </div>
+            <ol class="project-phases">
+              <li class="is-done">Projektovanje</li>
+              <li class="is-done">Izgradnja</li>
+              <li class="is-done">Ozelenjavanje</li>
+              <li class="is-done">Otvaranje</li>
+            </ol>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVISNE INFORMACIJE ============ -->
+  <section class="section section-alt" id="servis">
+    <div class="container">
+      <div class="section-head reveal" data-reveal>
+        <div>
+          <span class="eyebrow">Korisno</span>
+          <h2>Servisne informacije</h2>
+        </div>
+        <p class="section-desc">Radno vreme, kontakti i trenutni status komunalnih usluga u opštini.</p>
+      </div>
+
+      <div class="service-tabs reveal" data-reveal>
+        <div class="tabs-nav" role="tablist">
+          <button class="tab-btn is-active" data-tab="voda" role="tab">💧 Vodovod</button>
+          <button class="tab-btn" data-tab="struja" role="tab">⚡ Struja</button>
+          <button class="tab-btn" data-tab="smece" role="tab">🗑️ Odnošenje smeća</button>
+          <button class="tab-btn" data-tab="prevoz" role="tab">🚌 Javni prevoz</button>
+          <button class="tab-btn" data-tab="opstina" role="tab">🏛️ Mesna kancelarija</button>
+        </div>
+
+        <div class="tab-panels">
+          <div class="tab-panel is-active" data-panel="voda">
+            <div class="panel-status status-ok">Status: Uredno snabdevanje</div>
+            <p>Planirani prekid vodosnabdevanja u ulicama Vojvođanska i Zrenjaninski put, 3. jul od 09:00 do 15:00h zbog radova na mreži.</p>
+            <ul class="panel-list">
+              <li><strong>Dežurna služba:</strong> 011 2075 555</li>
+              <li><strong>Prijava kvara:</strong> vodovod@surcin.rs</li>
+              <li><strong>Radno vreme šaltera:</strong> pon–pet 07:00–15:00h</li>
+            </ul>
+          </div>
+          <div class="tab-panel" data-panel="struja">
+            <div class="panel-status status-warn">Status: Planirani radovi</div>
+            <p>Zbog redovnog održavanja mreže, isključenja struje moguća su 4. jula u naselju Jakovo, od 08:00 do 13:00h.</p>
+            <ul class="panel-list">
+              <li><strong>Prijava kvara (24h):</strong> 011 2027 100</li>
+              <li><strong>Elektrodistribucija Beograd:</strong> edb@edb.rs</li>
+              <li><strong>Info o isključenjima:</strong> objavljuje se ovde 48h unapred</li>
+            </ul>
+          </div>
+          <div class="tab-panel" data-panel="smece">
+            <div class="panel-status status-ok">Status: Redovan raspored</div>
+            <p>Odnošenje kućnog otpada — ponedeljak, sreda i petak. Reciklabilni otpad (papir, plastika, staklo) — utorkom.</p>
+            <ul class="panel-list">
+              <li><strong>JKP Gradska čistoća:</strong> 0800 110 011 (besplatno)</li>
+              <li><strong>Reciklažna ostrva:</strong> 7 lokacija u opštini</li>
+              <li><strong>Odnošenje krupnog otpada:</strong> po prijavi, jednom mesečno</li>
+            </ul>
+          </div>
+          <div class="tab-panel" data-panel="prevoz">
+            <div class="panel-status status-ok">Status: Redovan saobraćaj</div>
+            <p>Linije 401, 402 i 706 saobraćaju po redovnom režimu. Zbog radova na glavnoj saobraćajnici, autobusi koriste privremenu deonicu preko ulice Save Kovačevića.</p>
+            <ul class="panel-list">
+              <li><strong>Info centar GSP:</strong> 011 2645 400</li>
+              <li><strong>Red vožnje:</strong> dostupan na stanicama i online</li>
+              <li><strong>Prvi/poslednji polazak:</strong> 04:30h / 23:40h</li>
+            </ul>
+          </div>
+          <div class="tab-panel" data-panel="opstina">
+            <div class="panel-status status-ok">Status: Otvoreno</div>
+            <p>Mesna kancelarija Surčin prima stranke za sve opštinske usluge — matičar, građevinske dozvole, socijalna davanja.</p>
+            <ul class="panel-list">
+              <li><strong>Adresa:</strong> Vojvođanska 79, Surčin</li>
+              <li><strong>Radno vreme:</strong> pon–pet 07:30–15:30h</li>
+              <li><strong>Telefon:</strong> 011 8440 084</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NAJAVE ============ -->
+  <section class="section" id="najave">
+    <div class="container">
+      <div class="section-head reveal" data-reveal>
+        <div>
+          <span class="eyebrow">Uskoro</span>
+          <h2>Najave događaja i projekata</h2>
+        </div>
+        <p class="section-desc">Šta nas očekuje u narednom periodu — planovi koji tek dolaze.</p>
+      </div>
+
+      <div class="announce-grid">
+
+        <article class="announce-card reveal" data-reveal>
+          <span class="announce-ribbon">Najava projekta</span>
+          <h3>Solarna elektrana na krovu sportskog centra</h3>
+          <p>Opština priprema investicioni projekat postavljanja solarnih panela koji će pokrivati deo potrošnje sportskog centra. Početak radova očekuje se do kraja godine.</p>
+          <span class="announce-eta">Planiran početak: <strong>Oktobar 2026.</strong></span>
+        </article>
+
+        <article class="announce-card reveal" data-reveal>
+          <span class="announce-ribbon">Najava događaja</span>
+          <h3>Dani Surčina — jubilarno 15. izdanje</h3>
+          <p>Manifestacija povodom praznika opštine trajaće tri dana i uključiće koncerte, sajam privrede i sportske aktivnosti za sve generacije.</p>
+          <span class="announce-eta">Planiran termin: <strong>Septembar 2026.</strong></span>
+        </article>
+
+        <article class="announce-card reveal" data-reveal>
+          <span class="announce-ribbon">Najava projekta</span>
+          <h3>Novi dečiji vrtić u naselju Dobanovci</h3>
+          <p>Planirana izgradnja vrtića kapaciteta 150 mesta radi rasterećenja postojećih ustanova i skraćenja lista čekanja.</p>
+          <span class="announce-eta">Planiran početak: <strong>Rani 2027.</strong></span>
+        </article>
+
+        <article class="announce-card reveal" data-reveal>
+          <span class="announce-ribbon">Najava događaja</span>
+          <h3>Zimski sajam i novogodišnji vašar</h3>
+          <p>Tradicionalni zimski vašar sa štandovima domaće radinosti, klizalištem i programom za decu vratiće se na glavni trg.</p>
+          <span class="announce-eta">Planiran termin: <strong>Decembar 2026.</strong></span>
+        </article>
+
+      </div>
+
+      <div class="newsletter reveal" data-reveal>
+        <div class="newsletter-copy">
+          <h3>Ne propustite nijednu vest</h3>
+          <p>Prijavite se i primajte obaveštenja o novim vestima, događajima i statusu projekata direktno na email.</p>
+        </div>
+        <form class="newsletter-form" id="newsletterForm">
+          <input type="email" placeholder="Vaša email adresa" required aria-label="Email adresa">
+          <button type="submit" class="btn btn-primary">Prijavi se</button>
+        </form>
+        <p class="newsletter-success" id="newsletterSuccess" role="status">Hvala! Uspešno ste prijavljeni. ✓</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer" id="kontakt">
+  <div class="container footer-grid">
+    <div class="footer-col footer-brand">
+      <a href="#top" class="logo">
+        <span class="logo-mark">SI</span>
+        <span class="logo-text">Surčin<em>Info</em></span>
+      </a>
+      <p>Nezavisni informativni portal posvećen zajednici Surčina — vesti, događaji i praćenje javnih projekata.</p>
+      <div class="social-links">
+        <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-9h3l1-4h-4V7c0-1.1.4-2 2.1-2H17V1.2C16.6 1.1 15.4 1 14 1c-3 0-5 1.8-5 5.2V9H6v4h3v9h4Z"/></svg></a>
+        <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+        <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5 15 12l-5 2.5v-5Z" fill="currentColor" stroke="none"/></svg></a>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Navigacija</h4>
+      <ul>
+        <li><a href="#vesti">Vesti</a></li>
+        <li><a href="#dogadjaji">Događaji</a></li>
+        <li><a href="#projekti">Projekti</a></li>
+        <li><a href="#servis">Servisne informacije</a></li>
+        <li><a href="#najave">Najave</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Kontakt</h4>
+      <ul class="contact-list">
+        <li>Vojvođanska 79, Surčin</li>
+        <li>redakcija@surcininfo.rs</li>
+        <li>011 8440 084</li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Radno vreme mesne kancelarije</h4>
+      <ul class="contact-list">
+        <li>Ponedeljak – Petak: 07:30 – 15:30h</li>
+        <li>Subota, Nedelja: Neradni dani</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container footer-bottom-inner">
+      <p>© <span id="year"></span> Surčin Info. Sva prava zadržana.</p>
+      <p>Sadržaj na sajtu je informativnog karaktera.</p>
+    </div>
+  </div>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Nazad na vrh">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<script src="script.js"></script>
+</body>
+</html>
