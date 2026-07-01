@@ -9,18 +9,18 @@
     }
   });
 
-  /* ---------- Theme toggle ---------- */
-  const themeToggle = document.getElementById('themeToggle');
-  const root = document.documentElement;
-  const savedTheme = localStorage.getItem('surcin-theme');
-  if (savedTheme) root.setAttribute('data-theme', savedTheme);
-
-  themeToggle?.addEventListener('click', () => {
-    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    if (next === 'dark') root.setAttribute('data-theme', 'dark');
-    else root.removeAttribute('data-theme');
-    localStorage.setItem('surcin-theme', next);
+  /* ---------- Glass save/bookmark buttons ---------- */
+  const SAVE_KEY = 'surcin-saved';
+  const savedIds = new Set(JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'));
+  const saveButtons = document.querySelectorAll('.glass-save');
+  saveButtons.forEach(btn => {
+    const id = btn.dataset.saveId;
+    if (savedIds.has(id)) btn.classList.add('is-saved');
+    btn.addEventListener('click', () => {
+      if (savedIds.has(id)) { savedIds.delete(id); btn.classList.remove('is-saved'); }
+      else { savedIds.add(id); btn.classList.add('is-saved'); }
+      localStorage.setItem(SAVE_KEY, JSON.stringify([...savedIds]));
+    });
   });
 
   /* ---------- Header scroll state ---------- */

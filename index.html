@@ -13,6 +13,8 @@
 </head>
 <body>
 
+<div class="site-bg" aria-hidden="true"></div>
+
 <div class="loader" id="loader" aria-hidden="true">
   <div class="loader-mark">
     <span></span><span></span><span></span>
@@ -42,10 +44,6 @@
     </nav>
 
     <div class="header-actions">
-      <button class="theme-toggle" id="themeToggle" aria-label="Promeni temu">
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
-      </button>
       <button class="hamburger" id="hamburger" aria-label="Otvori meni" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -62,14 +60,9 @@
 
   <!-- ============ HERO ============ -->
   <section class="hero">
-    <div class="hero-blobs" aria-hidden="true">
-      <span class="blob blob-a"></span>
-      <span class="blob blob-b"></span>
-      <span class="blob blob-c"></span>
-    </div>
     <div class="container hero-inner">
-      <div class="hero-copy reveal" data-reveal>
-        <span class="eyebrow">Portal lokalne zajednice</span>
+      <div class="hero-glass reveal" data-reveal>
+        <span class="eyebrow eyebrow-light">Portal lokalne zajednice</span>
         <h1>Sve o <span class="text-gradient">Surčinu</span> na jednom mestu.</h1>
         <p class="hero-lead">Vesti, događaji, servisne informacije i praćenje velikih infrastrukturnih projekata — ažurno, pregledno i na jednom mestu za sve meštane Surčina.</p>
         <div class="hero-actions">
@@ -96,15 +89,6 @@
             <span class="stat-num" data-count="8">0</span>
             <span class="stat-label">mesnih zajednica</span>
           </div>
-        </div>
-      </div>
-      <div class="hero-visual reveal" data-reveal data-reveal-delay="150">
-        <img src="assets/img/hero-illustration.svg" alt="Ilustracija naselja Surčin uz obalu reke" loading="eager">
-        <div class="floating-card card-news">
-          <span class="dot dot-live"></span> Vesti se ažuriraju uživo
-        </div>
-        <div class="floating-card card-weather">
-          ☀️ 27°C · Surčin danas
         </div>
       </div>
     </div>
@@ -134,81 +118,111 @@
 
       <div class="news-grid" id="newsGrid">
 
-        <article class="news-card is-featured reveal" data-reveal data-category="infrastruktura">
+        <article class="news-card glass-card is-featured reveal" data-reveal data-category="infrastruktura">
+          <button class="glass-save" data-save-id="news-1" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/news-1.svg" alt="Radovi na rekonstrukciji ulice" loading="lazy">
             <span class="tag tag-infrastruktura">Infrastruktura</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-28">28. jun 2026.</time>
             <h3>Počela rekonstrukcija glavne saobraćajnice kroz centar Surčina</h3>
             <p>Radovi obuhvataju novi asfaltni sloj, proširenje trotoara i uvođenje LED javne rasvete na deonici dugoj 1,8 km. Saobraćaj je preusmeren na alternativne pravce.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-28">28. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
-        <article class="news-card reveal" data-reveal data-category="zivotna-sredina">
+        <article class="news-card glass-card reveal" data-reveal data-category="zivotna-sredina">
+          <button class="glass-save" data-save-id="news-2" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/news-2.svg" alt="Zelena površina i pošumljavanje" loading="lazy">
             <span class="tag tag-zivotna-sredina">Životna sredina</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-24">24. jun 2026.</time>
             <h3>Zasađeno 300 novih sadnica u parku pored Save</h3>
             <p>Akcija ozelenjavanja okupila je meštane, lokalna udruženja i učenike osnovnih škola u zajedničkom uređenju priobalja.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-24">24. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
-        <article class="news-card reveal" data-reveal data-category="kultura">
+        <article class="news-card glass-card reveal" data-reveal data-category="kultura">
+          <button class="glass-save" data-save-id="news-3" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/news-3.svg" alt="Dom kulture Surčin" loading="lazy">
             <span class="tag tag-kultura">Kultura</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-20">20. jun 2026.</time>
             <h3>Dom kulture najavljuje program za letnju sezonu</h3>
             <p>Koncerti, filmske projekcije na otvorenom i izložbe lokalnih umetnika biće organizovani svakog vikenda tokom jula i avgusta.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-20">20. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
-        <article class="news-card reveal" data-reveal data-category="sport">
+        <article class="news-card glass-card reveal" data-reveal data-category="sport">
+          <button class="glass-save" data-save-id="news-4" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/news-4.svg" alt="Sportski turnir" loading="lazy">
             <span class="tag tag-sport">Sport</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-15">15. jun 2026.</time>
             <h3>Održan tradicionalni malonogometni turnir „Surčin kup“</h3>
             <p>Učestvovalo je 16 ekipa iz svih mesnih zajednica. Pobednički pehar odneo je tim „Reka“ posle uzbudljivog finala.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-15">15. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
-        <article class="news-card reveal" data-reveal data-category="infrastruktura">
+        <article class="news-card glass-card reveal" data-reveal data-category="infrastruktura">
+          <button class="glass-save" data-save-id="news-5" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/project-2.svg" alt="Radovi na vodovodnoj mreži" loading="lazy">
             <span class="tag tag-infrastruktura">Infrastruktura</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-10">10. jun 2026.</time>
             <h3>Proširenje vodovodne mreže u naselju Bečmen</h3>
             <p>Postavljeno je 2,3 km nove vodovodne cevi, čime je poboljšan pritisak i kvalitet vodosnabdevanja za oko 400 domaćinstava.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-10">10. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
-        <article class="news-card reveal" data-reveal data-category="zivotna-sredina">
+        <article class="news-card glass-card reveal" data-reveal data-category="zivotna-sredina">
+          <button class="glass-save" data-save-id="news-6" aria-label="Sačuvaj vest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="news-media">
             <img src="assets/img/news-2.svg" alt="Reciklažno ostrvo" loading="lazy">
             <span class="tag tag-zivotna-sredina">Životna sredina</span>
           </div>
           <div class="news-body">
-            <time datetime="2026-06-05">5. jun 2026.</time>
             <h3>Postavljena nova reciklažna ostrva u tri naselja</h3>
             <p>Meštani sada mogu odvojeno da odlažu papir, plastiku i staklo na sedam novih lokacija širom opštine.</p>
-            <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span><time datetime="2026-06-05">5. jun 2026.</time></span>
+              <a href="#" class="read-more">Pročitaj više <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            </div>
           </div>
         </article>
 
@@ -221,7 +235,7 @@
   </section>
 
   <!-- ============ DOGAĐAJI ============ -->
-  <section class="section section-alt" id="dogadjaji">
+  <section class="section" id="dogadjaji">
     <div class="container">
       <div class="section-head reveal" data-reveal>
         <div>
@@ -231,7 +245,7 @@
         <p class="section-desc">Ne propustite dešavanja u vašoj mesnoj zajednici — od sajmova do sportskih manifestacija.</p>
       </div>
 
-      <div class="next-event-banner reveal" data-reveal>
+      <div class="next-event-banner glass-card reveal" data-reveal>
         <div class="next-event-info">
           <span class="eyebrow eyebrow-light">Sledeći veliki događaj</span>
           <h3>Surčinski letnji sajam i vašar</h3>
@@ -247,7 +261,10 @@
 
       <div class="events-grid">
 
-        <article class="event-card reveal" data-reveal>
+        <article class="event-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="event-1" aria-label="Sačuvaj događaj">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="event-date">
             <span class="ed-day">18</span>
             <span class="ed-month">JUL</span>
@@ -256,11 +273,16 @@
           <div class="event-body">
             <h3>Surčinski letnji sajam i vašar</h3>
             <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Glavni trg, Surčin</p>
-            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 18:00h</p>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span>18:00h</span>
+            </div>
           </div>
         </article>
 
-        <article class="event-card reveal" data-reveal>
+        <article class="event-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="event-2" aria-label="Sačuvaj događaj">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="event-date">
             <span class="ed-day">25</span>
             <span class="ed-month">JUL</span>
@@ -269,11 +291,16 @@
           <div class="event-body">
             <h3>Noćni turnir u malom fudbalu</h3>
             <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Sportski centar Surčin</p>
-            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 20:00h</p>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span>20:00h</span>
+            </div>
           </div>
         </article>
 
-        <article class="event-card reveal" data-reveal>
+        <article class="event-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="event-3" aria-label="Sačuvaj događaj">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="event-date">
             <span class="ed-day">02</span>
             <span class="ed-month">AVG</span>
@@ -282,11 +309,16 @@
           <div class="event-body">
             <h3>Filmske večeri na otvorenom</h3>
             <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Dvorište Doma kulture</p>
-            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 21:00h</p>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span>21:00h</span>
+            </div>
           </div>
         </article>
 
-        <article class="event-card reveal" data-reveal>
+        <article class="event-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="event-4" aria-label="Sačuvaj događaj">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <div class="event-date">
             <span class="ed-day">15</span>
             <span class="ed-month">AVG</span>
@@ -295,7 +327,9 @@
           <div class="event-body">
             <h3>Akcija čišćenja obale Save</h3>
             <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg> Priobalje, Surčin</p>
-            <p class="event-meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> 09:00h</p>
+            <div class="card-footer">
+              <span class="glass-pill"><span class="pill-dot"></span>09:00h</span>
+            </div>
           </div>
         </article>
 
@@ -316,7 +350,7 @@
 
       <div class="projects-list">
 
-        <article class="project-card reveal" data-reveal>
+        <article class="project-card glass-card reveal" data-reveal>
           <div class="project-media">
             <img src="assets/img/project-1.svg" alt="Izgradnja mosta i saobraćajnice" loading="lazy">
             <span class="status-badge status-progress">U toku</span>
@@ -329,9 +363,9 @@
               <span class="progress-value">68%</span>
             </div>
             <div class="project-meta">
-              <span><strong>Rok:</strong> Q4 2026.</span>
-              <span><strong>Budžet:</strong> 4,8 miliona €</span>
-              <span><strong>Izvođač:</strong> JP Putevi Beograd</span>
+              <span class="glass-pill">Rok: Q4 2026.</span>
+              <span class="glass-pill">Budžet: 4,8 miliona €</span>
+              <span class="glass-pill">Izvođač: JP Putevi Beograd</span>
             </div>
             <ol class="project-phases">
               <li class="is-done">Projektovanje</li>
@@ -342,7 +376,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-reveal>
+        <article class="project-card glass-card reveal" data-reveal>
           <div class="project-media">
             <img src="assets/img/project-2.svg" alt="Rekonstrukcija kanalizacione mreže" loading="lazy">
             <span class="status-badge status-progress">U toku</span>
@@ -355,9 +389,9 @@
               <span class="progress-value">42%</span>
             </div>
             <div class="project-meta">
-              <span><strong>Rok:</strong> Q1 2027.</span>
-              <span><strong>Budžet:</strong> 2,1 milion €</span>
-              <span><strong>Izvođač:</strong> JKP Vodovod i kanalizacija</span>
+              <span class="glass-pill">Rok: Q1 2027.</span>
+              <span class="glass-pill">Budžet: 2,1 milion €</span>
+              <span class="glass-pill">Izvođač: JKP Vodovod i kanalizacija</span>
             </div>
             <ol class="project-phases">
               <li class="is-done">Projektovanje</li>
@@ -368,7 +402,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-reveal>
+        <article class="project-card glass-card reveal" data-reveal>
           <div class="project-media">
             <img src="assets/img/project-3.svg" alt="Izgradnja nove škole" loading="lazy">
             <span class="status-badge status-planned">Planirano</span>
@@ -381,9 +415,9 @@
               <span class="progress-value">12%</span>
             </div>
             <div class="project-meta">
-              <span><strong>Rok:</strong> Q3 2028.</span>
-              <span><strong>Budžet:</strong> 9,5 miliona €</span>
-              <span><strong>Investitor:</strong> Grad Beograd</span>
+              <span class="glass-pill">Rok: Q3 2028.</span>
+              <span class="glass-pill">Budžet: 9,5 miliona €</span>
+              <span class="glass-pill">Investitor: Grad Beograd</span>
             </div>
             <ol class="project-phases">
               <li class="is-active">Idejni projekat</li>
@@ -394,7 +428,7 @@
           </div>
         </article>
 
-        <article class="project-card reveal" data-reveal>
+        <article class="project-card glass-card reveal" data-reveal>
           <div class="project-media">
             <img src="assets/img/project-1.svg" alt="Pešačko-biciklistička staza" loading="lazy">
             <span class="status-badge status-done">Završeno</span>
@@ -407,9 +441,9 @@
               <span class="progress-value">100%</span>
             </div>
             <div class="project-meta">
-              <span><strong>Završeno:</strong> Maj 2026.</span>
-              <span><strong>Budžet:</strong> 780.000 €</span>
-              <span><strong>Izvođač:</strong> Zelenilo Beograd</span>
+              <span class="glass-pill">Završeno: Maj 2026.</span>
+              <span class="glass-pill">Budžet: 780.000 €</span>
+              <span class="glass-pill">Izvođač: Zelenilo Beograd</span>
             </div>
             <ol class="project-phases">
               <li class="is-done">Projektovanje</li>
@@ -425,7 +459,7 @@
   </section>
 
   <!-- ============ SERVISNE INFORMACIJE ============ -->
-  <section class="section section-alt" id="servis">
+  <section class="section" id="servis">
     <div class="container">
       <div class="section-head reveal" data-reveal>
         <div>
@@ -435,7 +469,7 @@
         <p class="section-desc">Radno vreme, kontakti i trenutni status komunalnih usluga u opštini.</p>
       </div>
 
-      <div class="service-tabs reveal" data-reveal>
+      <div class="service-tabs glass-card reveal" data-reveal>
         <div class="tabs-nav" role="tablist">
           <button class="tab-btn is-active" data-tab="voda" role="tab">💧 Vodovod</button>
           <button class="tab-btn" data-tab="struja" role="tab">⚡ Struja</button>
@@ -508,37 +542,49 @@
 
       <div class="announce-grid">
 
-        <article class="announce-card reveal" data-reveal>
+        <article class="announce-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="announce-1" aria-label="Sačuvaj najavu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <span class="announce-ribbon">Najava projekta</span>
           <h3>Solarna elektrana na krovu sportskog centra</h3>
           <p>Opština priprema investicioni projekat postavljanja solarnih panela koji će pokrivati deo potrošnje sportskog centra. Početak radova očekuje se do kraja godine.</p>
-          <span class="announce-eta">Planiran početak: <strong>Oktobar 2026.</strong></span>
+          <span class="glass-pill">Planiran početak: Oktobar 2026.</span>
         </article>
 
-        <article class="announce-card reveal" data-reveal>
+        <article class="announce-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="announce-2" aria-label="Sačuvaj najavu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <span class="announce-ribbon">Najava događaja</span>
           <h3>Dani Surčina — jubilarno 15. izdanje</h3>
           <p>Manifestacija povodom praznika opštine trajaće tri dana i uključiće koncerte, sajam privrede i sportske aktivnosti za sve generacije.</p>
-          <span class="announce-eta">Planiran termin: <strong>Septembar 2026.</strong></span>
+          <span class="glass-pill">Planiran termin: Septembar 2026.</span>
         </article>
 
-        <article class="announce-card reveal" data-reveal>
+        <article class="announce-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="announce-3" aria-label="Sačuvaj najavu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <span class="announce-ribbon">Najava projekta</span>
           <h3>Novi dečiji vrtić u naselju Dobanovci</h3>
           <p>Planirana izgradnja vrtića kapaciteta 150 mesta radi rasterećenja postojećih ustanova i skraćenja lista čekanja.</p>
-          <span class="announce-eta">Planiran početak: <strong>Rani 2027.</strong></span>
+          <span class="glass-pill">Planiran početak: Rani 2027.</span>
         </article>
 
-        <article class="announce-card reveal" data-reveal>
+        <article class="announce-card glass-card reveal" data-reveal>
+          <button class="glass-save" data-save-id="announce-4" aria-label="Sačuvaj najavu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4h8a1.5 1.5 0 0 1 1.5 1.5V20l-5.5-3.5L5.5 20V5.5A1.5 1.5 0 0 1 7 4Z"/><path d="M17.5 3.5v4M15.5 5.5h4"/></svg>
+          </button>
           <span class="announce-ribbon">Najava događaja</span>
           <h3>Zimski sajam i novogodišnji vašar</h3>
           <p>Tradicionalni zimski vašar sa štandovima domaće radinosti, klizalištem i programom za decu vratiće se na glavni trg.</p>
-          <span class="announce-eta">Planiran termin: <strong>Decembar 2026.</strong></span>
+          <span class="glass-pill">Planiran termin: Decembar 2026.</span>
         </article>
 
       </div>
 
-      <div class="newsletter reveal" data-reveal>
+      <div class="newsletter glass-card reveal" data-reveal>
         <div class="newsletter-copy">
           <h3>Ne propustite nijednu vest</h3>
           <p>Prijavite se i primajte obaveštenja o novim vestima, događajima i statusu projekata direktno na email.</p>
