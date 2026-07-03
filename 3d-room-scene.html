@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D scena — dva zida (vrata i prozor)</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #dfe7ec;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  #scene-container {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  #info-panel {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    font-size: 13px;
+    line-height: 1.6;
+    color: #223;
+    max-width: 260px;
+  }
+  #info-panel h1 {
+    font-size: 15px;
+    margin: 0 0 8px 0;
+  }
+  #info-panel ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  #hint {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #445;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+</style>
+</head>
+<body>
+<div id="scene-container"></div>
+
+<div id="info-panel">
+  <h1>Plan prostorije</h1>
+  <ul>
+    <li>2 zida pod uglom od 90&deg;</li>
+    <li>Dužina zidova: 400 cm</li>
+    <li>Visina zidova: 260 cm</li>
+    <li>Vrata: 90 &times; 220 cm</li>
+    <li>Prozor: 129 &times; 140 cm (90 cm od poda)</li>
+  </ul>
+</div>
+
+<div id="hint">Levi klik + prevlačenje: rotacija &nbsp;|&nbsp; Točkić: zum &nbsp;|&nbsp; Desni klik: pomeranje</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+// ---- Konstante (sve u centimetrima) ----
+const WALL_LENGTH = 400;
+const WALL_HEIGHT = 260;
+const WALL_THICKNESS = 10;
+
+const DOOR_WIDTH = 90;
+const DOOR_HEIGHT = 220;
+
+const WINDOW_WIDTH = 129;
+const WINDOW_HEIGHT = 140;
+const WINDOW_SILL = 90; // razdaljina od poda do donje ivice prozora
+
+const WALL_COLOR = 0xf2ede4;
+const FRAME_COLOR = 0xffffff;
+
+// ---- Scena, kamera, renderer ----
+const container = document.getElementById("scene-container");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdfe7ec);
+scene.fog = new THREE.Fog(0xdfe7ec, 1200, 3200);
+
+const camera = new THREE.PerspectiveCamera(
+  50,
+  window.innerWidth / window.innerHeight,
+  1,
+  10000
+);
+camera.position.set(450, 400, 550);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+
+// ---- Kontrole (rotacija, zum, pomeranje) ----
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(WALL_LENGTH / 2, WALL_HEIGHT / 2, WALL_LENGTH / 2);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 100;
+controls.maxDistance = 2000;
+controls.maxPolarAngle = Math.PI / 2 - 0.01;
+controls.update();
+
+// ---- Svetla ----
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(500, 700, 300);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -600;
+sun.shadow.camera.right = 600;
+sun.shadow.camera.top = 600;
+sun.shadow.camera.bottom = -600;
+sun.shadow.camera.far = 2000;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight(0xffffff, 0.3);
+fill.position.set(-400, 300, -300);
+scene.add(fill);
+
+// ---- Pod ----
+const floorGeo = new THREE.PlaneGeometry(1600, 1600);
+const floorMat = new THREE.MeshStandardMaterial({ color: 0xc9beac, roughness: 0.9 });
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.set(WALL_LENGTH / 2, 0, WALL_LENGTH / 2);
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(1600, 32, 0x9aa7ad, 0xb9c2c6);
+grid.position.set(WALL_LENGTH / 2, 0.1, WALL_LENGTH / 2);
+scene.add(grid);
+
+// ---- Pomoćna funkcija za kreiranje kutije-zida ----
+const wallMaterial = new THREE.MeshStandardMaterial({ color: WALL_COLOR, roughness: 0.85 });
+const frameMaterial = new THREE.MeshStandardMaterial({ color: FRAME_COLOR, roughness: 0.6 });
+const glassMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0xbfe3f0,
+  transparent: true,
+  opacity: 0.35,
+  roughness: 0.05,
+  metalness: 0,
+  transmission: 0.6,
+  side: THREE.DoubleSide,
+});
+
+function addBox(parent, width, height, depth, x, y, z, material = wallMaterial) {
+  const geo = new THREE.BoxGeometry(width, height, depth);
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  parent.add(mesh);
+  return mesh;
+}
+
+// ==================================================================
+// ZID 1 — leži duž X ose (od x=0 do x=400), sadrži VRATA
+// Zid je centriran na z=0, debljine WALL_THICKNESS
+// ==================================================================
+const wall1 = new THREE.Group();
+scene.add(wall1);
+
+{
+  const doorLeft = (WALL_LENGTH - DOOR_WIDTH) / 2;   // 155
+  const doorRight = doorLeft + DOOR_WIDTH;            // 245
+  const lintelHeight = WALL_HEIGHT - DOOR_HEIGHT;     // 40
+
+  // levi segment zida (od 0 do doorLeft)
+  addBox(wall1, doorLeft, WALL_HEIGHT, WALL_THICKNESS,
+    doorLeft / 2, WALL_HEIGHT / 2, 0);
+
+  // desni segment zida (od doorRight do WALL_LENGTH)
+  addBox(wall1, WALL_LENGTH - doorRight, WALL_HEIGHT, WALL_THICKNESS,
+    doorRight + (WALL_LENGTH - doorRight) / 2, WALL_HEIGHT / 2, 0);
+
+  // nadvratnik (iznad vrata)
+  addBox(wall1, DOOR_WIDTH, lintelHeight, WALL_THICKNESS,
+    doorLeft + DOOR_WIDTH / 2, DOOR_HEIGHT + lintelHeight / 2, 0);
+
+  // okvir vrata (tanka ivica)
+  const frameThickness = 4;
+  addBox(wall1, DOOR_WIDTH + frameThickness * 2, frameThickness, WALL_THICKNESS + 2,
+    doorLeft + DOOR_WIDTH / 2, DOOR_HEIGHT + frameThickness / 2, 0, frameMaterial);
+  addBox(wall1, frameThickness, DOOR_HEIGHT, WALL_THICKNESS + 2,
+    doorLeft - frameThickness / 2, DOOR_HEIGHT / 2, 0, frameMaterial);
+  addBox(wall1, frameThickness, DOOR_HEIGHT, WALL_THICKNESS + 2,
+    doorRight + frameThickness / 2, DOOR_HEIGHT / 2, 0, frameMaterial);
+
+  // krilo vrata (dekorativno, blago otvoreno)
+  const doorPanelGeo = new THREE.BoxGeometry(DOOR_WIDTH - 4, DOOR_HEIGHT - 4, 3.5);
+  const doorPanelMat = new THREE.MeshStandardMaterial({ color: 0x8a5a3c, roughness: 0.5 });
+  const doorPanel = new THREE.Mesh(doorPanelGeo, doorPanelMat);
+  const hingeX = doorLeft + 2;
+  doorPanel.position.set(0, 0, 0);
+  doorPanel.geometry.translate((DOOR_WIDTH - 4) / 2, 0, 0);
+  doorPanel.position.set(hingeX, DOOR_HEIGHT / 2, 2);
+  doorPanel.rotation.y = -0.55;
+  doorPanel.castShadow = true;
+  doorPanel.receiveShadow = true;
+  wall1.add(doorPanel);
+}
+
+// ==================================================================
+// ZID 2 — leži duž Z ose (od z=0 do z=400), sadrži PROZOR
+// Povezan je sa zidom 1 pod uglom od 90° na x=0
+// ==================================================================
+const wall2 = new THREE.Group();
+wall2.position.set(0, 0, 0);
+wall2.rotation.y = Math.PI / 2; // rotacija za 90° oko Y ose
+scene.add(wall2);
+
+{
+  const winLeft = (WALL_LENGTH - WINDOW_WIDTH) / 2;   // 135.5
+  const winRight = winLeft + WINDOW_WIDTH;             // 264.5
+  const winTop = WINDOW_SILL + WINDOW_HEIGHT;          // 230
+  const aboveHeight = WALL_HEIGHT - winTop;            // 30
+
+  // levi segment zida (pun, od poda do plafona)
+  addBox(wall2, winLeft, WALL_HEIGHT, WALL_THICKNESS,
+    winLeft / 2, WALL_HEIGHT / 2, 0);
+
+  // desni segment zida
+  addBox(wall2, WALL_LENGTH - winRight, WALL_HEIGHT, WALL_THICKNESS,
+    winRight + (WALL_LENGTH - winRight) / 2, WALL_HEIGHT / 2, 0);
+
+  // segment ispod prozora (parapet)
+  addBox(wall2, WINDOW_WIDTH, WINDOW_SILL, WALL_THICKNESS,
+    winLeft + WINDOW_WIDTH / 2, WINDOW_SILL / 2, 0);
+
+  // segment iznad prozora (nadprozornik)
+  addBox(wall2, WINDOW_WIDTH, aboveHeight, WALL_THICKNESS,
+    winLeft + WINDOW_WIDTH / 2, winTop + aboveHeight / 2, 0);
+
+  // staklo prozora
+  const glassGeo = new THREE.PlaneGeometry(WINDOW_WIDTH - 6, WINDOW_HEIGHT - 6);
+  const glass = new THREE.Mesh(glassGeo, glassMaterial);
+  glass.position.set(winLeft + WINDOW_WIDTH / 2, WINDOW_SILL + WINDOW_HEIGHT / 2, 0);
+  wall2.add(glass);
+
+  // okvir prozora
+  const fw = 4;
+  addBox(wall2, WINDOW_WIDTH + fw * 2, fw, WALL_THICKNESS + 2,
+    winLeft + WINDOW_WIDTH / 2, WINDOW_SILL - fw / 2, 0, frameMaterial);
+  addBox(wall2, WINDOW_WIDTH + fw * 2, fw, WALL_THICKNESS + 2,
+    winLeft + WINDOW_WIDTH / 2, winTop + fw / 2, 0, frameMaterial);
+  addBox(wall2, fw, WINDOW_HEIGHT, WALL_THICKNESS + 2,
+    winLeft - fw / 2, WINDOW_SILL + WINDOW_HEIGHT / 2, 0, frameMaterial);
+  addBox(wall2, fw, WINDOW_HEIGHT, WALL_THICKNESS + 2,
+    winRight + fw / 2, WINDOW_SILL + WINDOW_HEIGHT / 2, 0, frameMaterial);
+  // prečka na sredini prozora
+  addBox(wall2, fw, WINDOW_HEIGHT, WALL_THICKNESS + 2,
+    winLeft + WINDOW_WIDTH / 2, WINDOW_SILL + WINDOW_HEIGHT / 2, 0, frameMaterial);
+}
+
+// ---- Responsive resize ----
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---- Render petlja ----
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
