@@ -3,117 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ETH / BTC — Divergence Alarm</title>
+<title>ETH / BTC / S&P500 / NASDAQ — Divergence Alarm</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
-  :root{
-    --bg:#0b0f17; --panel:#111826; --panel2:#161f30; --border:#22304a;
-    --text:#e7edf7; --muted:#8ea0bd; --green:#27d17f; --red:#ff4d6d;
-    --amber:#ffb648; --blue:#4da3ff;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    background:var(--bg); color:var(--text); padding:20px;
-  }
-  h1{font-size:20px; margin:0 0 4px;}
-  .sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
-  .price-row{
-    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
-    background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:16px 20px; margin-bottom:16px;
-  }
-  .price-row .big{font-size:32px; font-weight:700;}
-  .price-row .chg{font-size:13px; font-weight:600; padding:2px 8px; border-radius:6px;}
-  .chg.up{color:var(--green); background:rgba(39,209,127,.12);}
-  .chg.down{color:var(--red); background:rgba(255,77,109,.12);}
-  .price-sep{width:1px; background:var(--border); align-self:stretch; margin:0 8px;}
-  .meta{color:var(--muted); font-size:12px; margin-left:auto;}
-  .panel{
-    background:var(--panel); border:1px solid var(--border); border-radius:12px;
-    padding:16px 18px; margin-bottom:16px;
-  }
-  .panel h2{font-size:14px; margin:0 0 12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;}
-  .controls{display:flex; flex-wrap:wrap; gap:14px; align-items:end;}
-  .field{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
-  .field input, .field select{
-    background:var(--panel2); border:1px solid var(--border); color:var(--text);
-    border-radius:8px; padding:8px 10px; font-size:14px; min-width:120px;
-  }
-  button{
-    cursor:pointer; border:none; border-radius:8px; padding:10px 16px;
-    font-size:14px; font-weight:600; color:#0b0f17; background:var(--blue);
-    transition:opacity .15s;
-  }
-  button:hover{opacity:.85;}
-  button.secondary{background:var(--panel2); color:var(--text); border:1px solid var(--border);}
-  button:disabled{opacity:.4; cursor:not-allowed;}
-  .status-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--muted); margin-right:6px; flex-shrink:0; align-self:center;}
-  .status-dot.live{background:var(--green); box-shadow:0 0 8px var(--green);}
-  .status-dot.error{background:var(--red); box-shadow:0 0 8px var(--red);}
-  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px;}
-  .tf-card{
-    background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px;
-    position:relative; overflow:hidden;
-  }
-  .tf-card.alert{border-color:var(--red); box-shadow:0 0 0 1px var(--red), 0 0 16px rgba(255,77,109,.35);}
-  .tf-card h3{margin:0 0 10px; font-size:15px;}
-  .row{display:flex; justify-content:space-between; font-size:13px; padding:4px 0; border-bottom:1px dashed rgba(255,255,255,.06);}
-  .row:last-child{border-bottom:none;}
-  .row .lbl{color:var(--muted);}
-  .row .val{font-weight:600; font-family:ui-monospace,Menlo,Consolas,monospace;}
-  .val.green{color:var(--green);} .val.red{color:var(--red);} .val.amber{color:var(--amber);}
-  .bar-track{height:6px; background:#0b0f17; border-radius:4px; overflow:hidden; margin-top:4px;}
-  .bar-fill{height:100%; border-radius:4px; transition:width .3s;}
-  canvas.spark{width:100%; height:48px; display:block; margin-top:8px;}
-  .badge{display:inline-block; font-size:10px; padding:3px 8px; border-radius:5px; font-weight:700; letter-spacing:.03em; margin-top:6px;}
-  .badge.bull{background:rgba(39,209,127,.15); color:var(--green);}
-  .badge.bear{background:rgba(255,77,109,.15); color:var(--red);}
-  .badge.armed{background:rgba(255,182,72,.15); color:var(--amber);}
-  .badge.none{background:rgba(142,160,189,.12); color:var(--muted);}
-  .asset-section{margin-bottom:22px;}
-  .asset-section:last-child{margin-bottom:0;}
-  .asset-header{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-    margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border);}
-  #log{max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;}
-  .log-entry{font-size:12.5px; padding:8px 10px; border-radius:7px; background:var(--panel2); border-left:3px solid var(--border); display:flex; justify-content:space-between; gap:10px;}
-  .log-entry.crit{border-left-color:var(--red); background:rgba(255,77,109,.08);}
-  .log-entry.warn{border-left-color:var(--amber); background:rgba(255,182,72,.08);}
-  .log-entry .t{color:var(--muted); white-space:nowrap; font-family:ui-monospace,monospace; font-size:11px;}
-  #flashOverlay{
-    position:fixed; inset:0; display:none; z-index:999; pointer-events:none;
-    background:rgba(255,77,109,.18); animation:flash 0.7s steps(1) infinite;
-  }
-  @keyframes flash{50%{background:rgba(255,77,109,.02);}}
-  #bigAlertBanner{
-    display:none; position:fixed; top:18px; left:50%; transform:translateX(-50%);
-    background:linear-gradient(135deg,#ff4d6d,#c2275f); color:#fff; padding:16px 26px;
-    border-radius:12px; font-weight:700; font-size:15px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,.4);
-    max-width:90vw; text-align:center;
-  }
-  #bigAlertBanner button{margin-left:14px; background:#fff; color:#c2275f; padding:6px 12px; font-size:12px;}
-  .checks{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--muted);}
-  .checks label{display:flex; align-items:center; gap:6px; cursor:pointer;}
-  footer{color:var(--muted); font-size:11px; margin-top:20px; line-height:1.6;}
+:root{
+  --bg:#0b0f17;--panel:#111826;--panel2:#161f30;--border:#22304a;
+  --text:#e7edf7;--muted:#8ea0bd;--green:#27d17f;--red:#ff4d6d;
+  --amber:#ffb648;--blue:#4da3ff;--purple:#a78bfa;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);padding:20px;}
+h1{font-size:20px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:13px;margin-bottom:18px;}
+.price-row{
+  display:flex;align-items:stretch;flex-wrap:wrap;gap:4px;
+  background:var(--panel);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:16px;
+}
+.price-block{display:flex;flex-direction:column;gap:2px;padding:4px 12px;}
+.price-block .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.price-block .val{font-size:22px;font-weight:700;}
+.price-block .chg{font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;display:inline-block;margin-top:2px;}
+.chg.up{color:var(--green);background:rgba(39,209,127,.12);}
+.chg.down{color:var(--red);background:rgba(255,77,109,.12);}
+.price-sep{width:1px;background:var(--border);margin:4px 4px;flex-shrink:0;}
+.meta{color:var(--muted);font-size:11px;margin-left:auto;align-self:flex-end;padding:4px 0 4px 8px;}
+.status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);flex-shrink:0;align-self:center;margin-right:6px;}
+.status-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);}
+.status-dot.error{background:var(--red);box-shadow:0 0 8px var(--red);}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+.panel h2{font-size:14px;margin:0 0 12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.controls{display:flex;flex-wrap:wrap;gap:14px;align-items:end;}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);}
+.field input,.field select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px;min-width:120px;}
+button{cursor:pointer;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;color:#0b0f17;background:var(--blue);transition:opacity .15s;}
+button:hover{opacity:.85;}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border);}
+button:disabled{opacity:.4;cursor:not-allowed;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.tf-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.tf-card.alert{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 0 16px rgba(255,77,109,.35);}
+.tf-card h3{margin:0 0 10px;font-size:15px;}
+.row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.06);}
+.row:last-child{border-bottom:none;}
+.row .lbl{color:var(--muted);}
+.row .val{font-weight:600;font-family:ui-monospace,Menlo,Consolas,monospace;}
+.val.green{color:var(--green);}.val.red{color:var(--red);}.val.amber{color:var(--amber);}
+.bar-track{height:6px;background:#0b0f17;border-radius:4px;overflow:hidden;margin-top:4px;}
+.bar-fill{height:100%;border-radius:4px;transition:width .3s;}
+canvas.spark{width:100%;height:48px;display:block;margin-top:8px;}
+.badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:5px;font-weight:700;letter-spacing:.03em;margin-top:6px;}
+.badge.bull{background:rgba(39,209,127,.15);color:var(--green);}
+.badge.bear{background:rgba(255,77,109,.15);color:var(--red);}
+.badge.armed{background:rgba(255,182,72,.15);color:var(--amber);}
+.badge.none{background:rgba(142,160,189,.12);color:var(--muted);}
+.asset-section{margin-bottom:22px;}
+.asset-section:last-child{margin-bottom:0;}
+.asset-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+#log{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.log-entry{font-size:12.5px;padding:8px 10px;border-radius:7px;background:var(--panel2);border-left:3px solid var(--border);display:flex;justify-content:space-between;gap:10px;}
+.log-entry.crit{border-left-color:var(--red);background:rgba(255,77,109,.08);}
+.log-entry.warn{border-left-color:var(--amber);background:rgba(255,182,72,.08);}
+.log-entry .t{color:var(--muted);white-space:nowrap;font-family:ui-monospace,monospace;font-size:11px;}
+#flashOverlay{position:fixed;inset:0;display:none;z-index:999;pointer-events:none;background:rgba(255,77,109,.18);animation:flash 0.7s steps(1) infinite;}
+@keyframes flash{50%{background:rgba(255,77,109,.02);}}
+#bigAlertBanner{display:none;position:fixed;top:18px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff4d6d,#c2275f);color:#fff;padding:16px 26px;border-radius:12px;font-weight:700;font-size:15px;z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90vw;text-align:center;}
+#bigAlertBanner button{margin-left:14px;background:#fff;color:#c2275f;padding:6px 12px;font-size:12px;}
+.checks{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+.checks label{display:flex;align-items:center;gap:6px;cursor:pointer;}
+footer{color:var(--muted);font-size:11px;margin-top:20px;line-height:1.7;}
 </style>
 </head>
 <body>
-
 <div id="flashOverlay"></div>
 <div id="bigAlertBanner"></div>
 
-<h1>ETH / BTC — Divergence Alarm</h1>
-<div class="sub">Alarm: RSI/cena divergencija na 15 min / 30 min / 1 h, nakon prethodnog probijanja RSI ekstrema. Podaci: Binance public API (ETHUSDT, BTCUSDT).</div>
+<h1>ETH / BTC / S&P 500 / NASDAQ — Divergence Alarm</h1>
+<div class="sub">Alarm jedanput po divergenciji po chartu — zvuk + notifikacija + email. ETH/BTC: Binance. S&amp;P 500/NASDAQ: Yahoo Finance (trguje radnim danima 15:30–22:00 CET).</div>
 
 <div class="price-row">
   <span class="status-dot" id="statusDot"></span>
-  <span style="color:var(--blue);font-size:12px;font-weight:700;align-self:center;">ETH</span>
-  <span id="bigPriceETHUSDT" class="big">—</span>
-  <span id="priceChgETHUSDT" class="chg">—</span>
-  <span class="price-sep"></span>
-  <span style="color:var(--amber);font-size:12px;font-weight:700;align-self:center;">BTC</span>
-  <span id="bigPriceBTCUSDT" class="big" style="color:var(--amber)">—</span>
-  <span id="priceChgBTCUSDT" class="chg">—</span>
+  <div class="price-block">
+    <span class="lbl" style="color:var(--blue)">ETH</span>
+    <span class="val" id="bigPriceETH">—</span>
+    <span class="chg" id="priceChgETH">—</span>
+  </div>
+  <div class="price-sep"></div>
+  <div class="price-block">
+    <span class="lbl" style="color:var(--amber)">BTC</span>
+    <span class="val" style="color:var(--amber)" id="bigPriceBTC">—</span>
+    <span class="chg" id="priceChgBTC">—</span>
+  </div>
+  <div class="price-sep"></div>
+  <div class="price-block">
+    <span class="lbl" style="color:var(--green)">S&amp;P 500</span>
+    <span class="val" style="color:var(--green)" id="bigPriceSPX">—</span>
+    <span class="chg" id="priceChgSPX">—</span>
+  </div>
+  <div class="price-sep"></div>
+  <div class="price-block">
+    <span class="lbl" style="color:var(--purple)">NASDAQ</span>
+    <span class="val" style="color:var(--purple)" id="bigPriceNDX">—</span>
+    <span class="chg" id="priceChgNDX">—</span>
+  </div>
   <span class="meta" id="lastUpdate">Nije pokrenuto</span>
 </div>
 
@@ -121,11 +113,11 @@
   <h2>Podešavanja alarma</h2>
   <div class="controls">
     <div class="field">
-      <label for="rsiOversold">RSI oversold prag — ETH (BTC fiksno: 21)</label>
+      <label for="rsiOversold">RSI oversold prag — samo ETH (BTC/SP500/NASDAQ fiksno: 15)</label>
       <input type="number" id="rsiOversold" value="30" min="1" max="50">
     </div>
     <div class="field">
-      <label for="rsiOverbought">RSI overbought prag — ETH (BTC fiksno: 74)</label>
+      <label for="rsiOverbought">RSI overbought prag — samo ETH (BTC/SP500/NASDAQ fiksno: 77)</label>
       <input type="number" id="rsiOverbought" value="70" min="50" max="99">
     </div>
     <div class="field">
@@ -173,7 +165,7 @@
   <div class="checks" style="margin-top:14px;">
     <label><input type="checkbox" id="chkEmail" checked> Pošalji email kad se divergencija potvrdi</label>
   </div>
-  <div class="sub" id="emailStatus" style="margin-top:10px; margin-bottom:0;">Podešavanja se čuvaju lokalno u browseru (localStorage).</div>
+  <div class="sub" id="emailStatus" style="margin-top:10px;margin-bottom:0;">Podešavanja se čuvaju lokalno u browseru (localStorage).</div>
 </div>
 
 <div class="panel">
@@ -187,449 +179,513 @@
 </div>
 
 <footer>
-  Pravilo alarma (po svakom vremenskom okviru i paru, nezavisno):<br>
-  • <b>Bullish</b>: RSI prvo padne ispod praga preprodatosti → setup se "naoruža". Tek nakon toga, ako cena formira niži low a RSI u istom trenutku formira viši low (klasična bullish divergencija), oglašava se alarm.<br>
-  • <b>Bearish</b>: zrcalno — RSI prvo ode iznad praga prekupljenosti → setup se naoruža, pa kad cena formira viši high a RSI niži high, oglašava se alarm.<br>
-  Podaci se povlače direktno iz browsera sa Binance public API-ja (api.binance.com) za parove ETHUSDT i BTCUSDT — bez API ključa, bez servera. Detekcija pivota je pojednostavljena heuristika, nije finansijski savet.
+  <b>Alarm jedanput po chartu:</b> RSI mora da se vrati iznad/ispod praga pre nego što se setup može ponovo naoružati. Isti pivot par ne okida alarm dva puta.<br>
+  Pravilo: RSI probija ekstrem → setup naoružan → price lower-low + RSI higher-low (bullish) ili price higher-high + RSI lower-high (bearish) → alarm jedanput.<br>
+  ETH RSI pragovi podešljivi. BTC / S&amp;P 500 / NASDAQ: fiksno RSI &lt;15 (bullish) / &gt;77 (bearish). Nije finansijski savet.
 </footer>
 
 <script>
 (function(){
-  "use strict";
+"use strict";
 
-  const ASSETS = [
-    { symbol:"ETHUSDT", label:"ETH", name:"Eterium", color:"var(--blue)", timeframes:[
-      { key:"15m", label:"15 min", binanceInterval:"15m" },
-      { key:"30m", label:"30 min", binanceInterval:"30m" },
-      { key:"1h",  label:"1 sat",  binanceInterval:"1h"  },
-    ]},
-    { symbol:"BTCUSDT", label:"BTC", name:"Bitcoin", color:"var(--amber)", oversold:21, overbought:74, timeframes:[
-      { key:"15m", label:"15 min", binanceInterval:"15m" },
-      { key:"30m", label:"30 min", binanceInterval:"30m" },
-      { key:"1h",  label:"1 sat",  binanceInterval:"1h"  },
-    ]},
-  ];
+const ASSETS = [
+  {
+    symbol:"ETHUSDT", key:"ETH", label:"ETH", name:"Eterium",
+    color:"var(--blue)", source:"binance",
+    // oversold/overbought null = koristi globalne inpute
+    timeframes:[
+      {key:"15m",label:"15 min",binanceInterval:"15m"},
+      {key:"30m",label:"30 min",binanceInterval:"30m"},
+      {key:"1h", label:"1 sat", binanceInterval:"1h"},
+    ]
+  },
+  {
+    symbol:"BTCUSDT", key:"BTC", label:"BTC", name:"Bitcoin",
+    color:"var(--amber)", source:"binance",
+    oversold:15, overbought:77,
+    timeframes:[
+      {key:"15m",label:"15 min",binanceInterval:"15m"},
+      {key:"30m",label:"30 min",binanceInterval:"30m"},
+      {key:"1h", label:"1 sat", binanceInterval:"1h"},
+    ]
+  },
+  {
+    symbol:"^GSPC", key:"SPX", label:"S&P 500", name:"S&P 500",
+    color:"var(--green)", source:"yahoo",
+    oversold:15, overbought:77,
+    timeframes:[
+      {key:"15m",label:"15 min",yahooInterval:"15m",yahooRange:"60d"},
+      {key:"30m",label:"30 min",yahooInterval:"30m",yahooRange:"60d"},
+      {key:"1h", label:"1 sat", yahooInterval:"1h", yahooRange:"2y"},
+    ]
+  },
+  {
+    symbol:"^IXIC", key:"NDX", label:"NASDAQ", name:"NASDAQ",
+    color:"var(--purple)", source:"yahoo",
+    oversold:15, overbought:77,
+    timeframes:[
+      {key:"15m",label:"15 min",yahooInterval:"15m",yahooRange:"60d"},
+      {key:"30m",label:"30 min",yahooInterval:"30m",yahooRange:"60d"},
+      {key:"1h", label:"1 sat", yahooInterval:"1h", yahooRange:"2y"},
+    ]
+  },
+];
 
-  const state = {
-    running:false,
-    timer:null,
-    lastPrice:{},
-    setups:{},
+const state = { running:false, timer:null, lastPrice:{}, setups:{} };
+ASSETS.forEach(asset => {
+  state.lastPrice[asset.key] = null;
+  asset.timeframes.forEach(tf => {
+    state.setups[asset.key+"-"+tf.key] = {
+      oversoldArmed:false,
+      overboughtArmed:false,
+      // edge-triggered re-arming: RSI mora preci u suprotnom smeru pre ponovnog arming-a
+      rsiWasAboveOversold:true,
+      rsiWasBelowOverbought:true,
+      // pivot pair deduplication: pamti koji par je vec okidao alarm
+      lastBullishPivot:null,
+      lastBearishPivot:null,
+    };
+  });
+});
+
+// ---------- DOM ----------
+const el = id => document.getElementById(id);
+const log = el("log");
+const flashOverlay = el("flashOverlay");
+const bigBanner = el("bigAlertBanner");
+
+const assetSections = el("assetSections");
+ASSETS.forEach(asset => {
+  const section = document.createElement("div");
+  section.className = "asset-section";
+  const header = document.createElement("div");
+  header.className = "asset-header";
+  header.style.color = asset.color;
+  const thresh = asset.oversold != null
+    ? ` — RSI <${asset.oversold} bullish / >${asset.overbought} bearish`
+    : " — RSI prag: podešljivo";
+  header.textContent = asset.label + " — " + asset.name + thresh;
+  section.appendChild(header);
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  section.appendChild(grid);
+  assetSections.appendChild(section);
+
+  asset.timeframes.forEach(tf => {
+    const card = document.createElement("div");
+    card.className = "tf-card";
+    card.id = `card-${asset.key}-${tf.key}`;
+    card.innerHTML = `
+      <h3>${tf.label}</h3>
+      <div class="row"><span class="lbl">Cena</span><span class="val" id="price-${asset.key}-${tf.key}">—</span></div>
+      <div class="row"><span class="lbl">RSI(14)</span><span class="val" id="rsi-${asset.key}-${tf.key}">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="rsibar-${asset.key}-${tf.key}" style="width:0%;background:var(--blue);"></div></div>
+      <div id="status-${asset.key}-${tf.key}"><span class="badge none">Neutralno</span></div>
+      <canvas class="spark" id="spark-${asset.key}-${tf.key}"></canvas>
+    `;
+    grid.appendChild(card);
+  });
+});
+
+// ---------- audio ----------
+let audioCtx = null;
+function beep(freq=880,duration=180,type="sine",delay=0){
+  if(el("chkMute").checked) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const t0=audioCtx.currentTime+delay;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type=type; osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0.0001,t0);
+    gain.gain.exponentialRampToValueAtTime(0.25,t0+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001,t0+duration/1000);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0+duration/1000+0.05);
+  }catch(e){}
+}
+function alarmSound(){
+  beep(1100,220,"square",0); beep(1400,220,"square",0.25); beep(1100,260,"square",0.5);
+}
+el("testSoundBtn").addEventListener("click",alarmSound);
+
+// ---------- save ----------
+el("saveBtn").addEventListener("click",()=>{
+  try{
+    const html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+    const blob=new Blob([html],{type:"text/html"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="market-alarm.html";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    addLog("Stranica sačuvana.",null);
+  }catch(e){ alert("Čuvanje nije uspelo: "+e.message); }
+});
+
+// ---------- notifications ----------
+el("notifBtn").addEventListener("click",async()=>{
+  if(!("Notification" in window)){alert("Browser ne podržava notifikacije.");return;}
+  const perm=await Notification.requestPermission();
+  el("notifBtn").textContent=perm==="granted"?"🔔 Notifikacije aktivne":"🔔 Omogući notifikacije";
+});
+function notify(title,body){
+  if("Notification" in window&&Notification.permission==="granted"){
+    try{new Notification(title,{body});}catch(e){}
+  }
+}
+
+// ---------- log ----------
+function addLog(message,level){
+  const entry=document.createElement("div");
+  entry.className="log-entry"+(level==="crit"?" crit":level==="warn"?" warn":"");
+  const time=new Date().toLocaleTimeString();
+  entry.innerHTML=`<span>${message}</span><span class="t">${time}</span>`;
+  log.prepend(entry);
+  while(log.children.length>100) log.removeChild(log.lastChild);
+}
+
+// ---------- alarm ----------
+function fireDivergenceAlarm(asset,tf,message,extra){
+  addLog(message,"crit");
+  alarmSound();
+  notify("🚨 "+asset.label+" Divergencija — "+tf.label,message);
+  showBigBanner(message);
+  sendEmailAlert(asset,tf,message,extra);
+}
+
+// ---------- email ----------
+const EMAIL_STORAGE_KEY="ethDivergenceEmailConfig";
+function loadEmailConfig(){
+  try{
+    const raw=localStorage.getItem(EMAIL_STORAGE_KEY);
+    if(!raw) return;
+    const cfg=JSON.parse(raw);
+    el("emailTo").value=cfg.to||"";
+    el("emailPublicKey").value=cfg.publicKey||"";
+    el("emailServiceId").value=cfg.serviceId||"";
+    el("emailTemplateId").value=cfg.templateId||"";
+  }catch(e){}
+}
+function saveEmailConfig(){
+  const cfg={
+    to:el("emailTo").value.trim(),
+    publicKey:el("emailPublicKey").value.trim(),
+    serviceId:el("emailServiceId").value.trim(),
+    templateId:el("emailTemplateId").value.trim(),
   };
-  ASSETS.forEach(asset => {
-    state.lastPrice[asset.symbol] = null;
-    asset.timeframes.forEach(tf => {
-      state.setups[asset.symbol+"-"+tf.key] = { oversoldArmed:false, overboughtArmed:false };
-    });
-  });
+  localStorage.setItem(EMAIL_STORAGE_KEY,JSON.stringify(cfg));
+  el("emailStatus").textContent="Email podešavanja sačuvana ("+new Date().toLocaleTimeString()+").";
+  return cfg;
+}
+el("emailSaveBtn").addEventListener("click",saveEmailConfig);
+loadEmailConfig();
 
-  // ---------- DOM ----------
-  const el = (id)=>document.getElementById(id);
-  const log = el("log");
-  const flashOverlay = el("flashOverlay");
-  const bigBanner = el("bigAlertBanner");
+function emailConfigReady(cfg){return cfg.to&&cfg.publicKey&&cfg.serviceId&&cfg.templateId;}
 
-  const assetSections = el("assetSections");
-  ASSETS.forEach(asset => {
-    const section = document.createElement("div");
-    section.className = "asset-section";
-    const header = document.createElement("div");
-    header.className = "asset-header";
-    header.style.color = asset.color;
-    header.textContent = asset.label + " — " + asset.name +
-      (asset.oversold != null ? `  (RSI prag: <${asset.oversold} / >${asset.overbought})` : "");
-    section.appendChild(header);
-    const grid = document.createElement("div");
-    grid.className = "grid";
-    grid.id = "grid-" + asset.symbol;
-    section.appendChild(grid);
-    assetSections.appendChild(section);
+async function sendEmailViaEmailJS(subject,message,params){
+  const cfg={
+    to:el("emailTo").value.trim(),
+    publicKey:el("emailPublicKey").value.trim(),
+    serviceId:el("emailServiceId").value.trim(),
+    templateId:el("emailTemplateId").value.trim(),
+  };
+  if(!emailConfigReady(cfg)){addLog("Email nije poslat — podešavanja nisu kompletna.","warn");return;}
+  if(typeof emailjs==="undefined"){addLog("Email nije poslat — EmailJS nije učitan.","warn");return;}
+  try{
+    await emailjs.send(cfg.serviceId,cfg.templateId,{
+      to_email:cfg.to,subject,message,...params
+    },{publicKey:cfg.publicKey});
+    addLog("Email poslat na "+cfg.to+".",null);
+  }catch(err){
+    addLog("Greška slanja emaila: "+(err&&err.text?err.text:err.message||err),"warn");
+  }
+}
 
-    asset.timeframes.forEach(tf => {
-      const card = document.createElement("div");
-      card.className = "tf-card";
-      card.id = "card-" + asset.symbol + "-" + tf.key;
-      card.innerHTML = `
-        <h3>${tf.label}</h3>
-        <div class="row"><span class="lbl">Cena</span><span class="val" id="price-${asset.symbol}-${tf.key}">—</span></div>
-        <div class="row"><span class="lbl">RSI(14)</span><span class="val" id="rsi-${asset.symbol}-${tf.key}">—</span></div>
-        <div class="bar-track"><div class="bar-fill" id="rsibar-${asset.symbol}-${tf.key}" style="width:0%;background:var(--blue);"></div></div>
-        <div id="status-${asset.symbol}-${tf.key}"><span class="badge none">Neutralno</span></div>
-        <canvas class="spark" id="spark-${asset.symbol}-${tf.key}"></canvas>
-      `;
-      grid.appendChild(card);
-    });
-  });
+function sendEmailAlert(asset,tf,message,extra){
+  if(!el("chkEmail").checked) return;
+  sendEmailViaEmailJS(
+    `${asset.label} Divergencija (${tf.label}) — ${extra&&extra.type==="bearish"?"BEARISH":"BULLISH"}`,
+    message,
+    {timeframe:tf.label,type:extra?extra.type:"",price:extra?extra.price:"",rsi:extra?extra.rsi:""}
+  );
+}
 
-  // ---------- audio ----------
-  let audioCtx = null;
-  function beep(freq=880, duration=180, type="sine", delay=0){
-    if (el("chkMute").checked) return;
+el("emailTestBtn").addEventListener("click",()=>{
+  saveEmailConfig();
+  sendEmailViaEmailJS(
+    "Alarm test — ETH/BTC/SP500/NASDAQ",
+    "Test poruka. Podešavanja su ispravna.",
+    {timeframe:"test",type:"test",price:"-",rsi:"-"}
+  );
+});
+
+let bannerTimeout=null;
+function showBigBanner(message){
+  bigBanner.innerHTML=`🚨 ${message} <button id="closeBanner">U redu</button>`;
+  bigBanner.style.display="block";
+  flashOverlay.style.display="block";
+  el("closeBanner").addEventListener("click",hideBigBanner);
+  clearTimeout(bannerTimeout);
+  bannerTimeout=setTimeout(hideBigBanner,30000);
+}
+function hideBigBanner(){
+  bigBanner.style.display="none";
+  flashOverlay.style.display="none";
+}
+
+// ---------- RSI ----------
+function computeRSISeries(closes,period=14){
+  const out=new Array(closes.length).fill(null);
+  if(closes.length<period+1) return out;
+  let gS=0,lS=0;
+  for(let i=1;i<=period;i++){
+    const d=closes[i]-closes[i-1];
+    if(d>=0) gS+=d; else lS-=d;
+  }
+  let ag=gS/period,al=lS/period;
+  out[period]=al===0?100:100-(100/(1+(ag/al)));
+  for(let i=period+1;i<closes.length;i++){
+    const d=closes[i]-closes[i-1];
+    const g=d>0?d:0,l=d<0?-d:0;
+    ag=(ag*(period-1)+g)/period;
+    al=(al*(period-1)+l)/period;
+    out[i]=al===0?100:100-(100/(1+(ag/al)));
+  }
+  return out;
+}
+
+// ---------- pivots ----------
+function findPivots(closes,rsi,lookback=80,pw=2,minSep=3){
+  const n=closes.length,start=Math.max(pw,n-lookback);
+  const lows=[],highs=[];
+  for(let i=start;i<n-pw;i++){
+    if(rsi[i]==null) continue;
+    let isL=true,isH=true;
+    for(let w=1;w<=pw;w++){
+      if(closes[i]>closes[i-w]||closes[i]>closes[i+w]) isL=false;
+      if(closes[i]<closes[i-w]||closes[i]<closes[i+w]) isH=false;
+    }
+    if(isL) lows.push(i);
+    if(isH) highs.push(i);
+  }
+  function last2(arr){
+    const f=[];
+    for(const idx of arr) if(!f.length||idx-f[f.length-1]>=minSep) f.push(idx);
+    return f.slice(-2);
+  }
+  return {lows:last2(lows),highs:last2(highs)};
+}
+
+// ---------- fetch: Binance ----------
+async function fetchBinance(symbol,interval,limit=300){
+  const url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error("Binance API greška "+res.status);
+  return (await res.json()).map(k=>({close:+k[4]}));
+}
+
+// ---------- fetch: Yahoo Finance ----------
+async function fetchYahoo(symbol,interval,range){
+  const enc=encodeURIComponent(symbol);
+  const base=`/v8/finance/chart/${enc}?interval=${interval}&range=${range}&includePrePost=false`;
+  const hosts=["https://query1.finance.yahoo.com","https://query2.finance.yahoo.com"];
+  let lastErr;
+  for(const host of hosts){
     try{
-      if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-      const t0 = audioCtx.currentTime + delay;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type; osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, t0);
-      gain.gain.exponentialRampToValueAtTime(0.25, t0+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration/1000);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(t0); osc.stop(t0+duration/1000+0.05);
-    }catch(e){}
+      const res=await fetch(host+base);
+      if(!res.ok) throw new Error("Yahoo HTTP "+res.status);
+      const json=await res.json();
+      const result=json?.chart?.result?.[0];
+      if(!result) throw new Error("Nema podataka za "+symbol);
+      const ts=result.timestamp||[];
+      const q=result.indicators.quote[0];
+      return ts
+        .map((_,i)=>({close:q.close?.[i]}))
+        .filter(c=>c.close!=null&&!isNaN(c.close)&&c.close>0)
+        .slice(-300);
+    }catch(e){lastErr=e;}
   }
-  function alarmSound(){
-    beep(1100,220,"square",0); beep(1400,220,"square",0.25); beep(1100,260,"square",0.5);
-  }
-  el("testSoundBtn").addEventListener("click", alarmSound);
+  throw lastErr||new Error("Yahoo Finance nije dostupan za "+symbol);
+}
 
-  // ---------- save page locally ----------
-  el("saveBtn").addEventListener("click", ()=>{
-    try{
-      const html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
-      const blob = new Blob([html], {type:"text/html"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "eterium-price-alarm.html";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 5000);
-      addLog("Stranica sačuvana (download pokrenut).", null);
-    }catch(e){
-      alert("Čuvanje nije uspelo: " + e.message);
-    }
+// ---------- sparkline ----------
+function drawSpark(id,values){
+  const canvas=el(id);
+  if(!canvas||!values.length) return;
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.clientWidth||200,h=canvas.clientHeight||48;
+  canvas.width=w*dpr; canvas.height=h*dpr;
+  const ctx=canvas.getContext("2d");
+  ctx.scale(dpr,dpr); ctx.clearRect(0,0,w,h);
+  const min=Math.min(...values),max=Math.max(...values),range=(max-min)||1;
+  ctx.beginPath();
+  values.forEach((v,i)=>{
+    const x=(i/(values.length-1))*w,y=h-((v-min)/range)*h;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   });
+  ctx.strokeStyle=values[values.length-1]>=values[0]?"#27d17f":"#ff4d6d";
+  ctx.lineWidth=1.5; ctx.stroke();
+}
 
-  // ---------- notifications ----------
-  el("notifBtn").addEventListener("click", async ()=>{
-    if (!("Notification" in window)){ alert("Browser ne podržava notifikacije."); return; }
-    const perm = await Notification.requestPermission();
-    el("notifBtn").textContent = perm === "granted" ? "🔔 Notifikacije aktivne" : "🔔 Omogući notifikacije";
-  });
-  function notify(title, body){
-    if ("Notification" in window && Notification.permission === "granted"){
-      try{ new Notification(title, {body}); }catch(e){}
+function fmt(n,d=2){return(n==null||isNaN(n))?"—":n.toFixed(d);}
+function fmtPrice(n,asset){
+  if(n==null||isNaN(n)) return "—";
+  const s=n>=1000?n.toLocaleString("en-US",{maximumFractionDigits:2}):n.toFixed(2);
+  return asset.source==="binance"?"$"+s:s;
+}
+
+// ---------- per-timeframe ----------
+async function processTimeframe(asset,tf){
+  let closes;
+  if(asset.source==="binance"){
+    closes=(await fetchBinance(asset.symbol,tf.binanceInterval,300)).map(c=>c.close);
+  } else {
+    closes=(await fetchYahoo(asset.symbol,tf.yahooInterval,tf.yahooRange)).map(c=>c.close);
+  }
+  if(closes.length<35) return null;
+
+  const rsi=computeRSISeries(closes,14);
+  const lastClose=closes[closes.length-1];
+  const lastRSI=rsi[rsi.length-1];
+
+  const rsiOS  = asset.oversold   !=null ? asset.oversold   : parseFloat(el("rsiOversold").value||30);
+  const rsiOB  = asset.overbought !=null ? asset.overbought : parseFloat(el("rsiOverbought").value||70);
+  const setup  = state.setups[asset.key+"-"+tf.key];
+
+  // ── EDGE-TRIGGERED RE-ARMING ───────────────────────────────────────────────
+  // RSI mora preci u suprotnom smeru pre ponovnog arm-a → sprečava spam alarme
+  if(lastRSI!=null){
+    if(lastRSI>=rsiOS)  setup.rsiWasAboveOversold=true;
+    if(lastRSI<=rsiOB)  setup.rsiWasBelowOverbought=true;
+
+    // Arm bullish: samo ako je RSI prethodno bio IZNAD praga
+    if(lastRSI<rsiOS && !setup.oversoldArmed && setup.rsiWasAboveOversold){
+      setup.oversoldArmed=true;
+      setup.rsiWasAboveOversold=false; // reset dok RSI ne izadje iznad praga
+      addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} ispod ${rsiOS} — bullish setup naoružan.`,null);
+    }
+    // Arm bearish: samo ako je RSI prethodno bio ISPOD praga
+    if(lastRSI>rsiOB && !setup.overboughtArmed && setup.rsiWasBelowOverbought){
+      setup.overboughtArmed=true;
+      setup.rsiWasBelowOverbought=false;
+      addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} iznad ${rsiOB} — bearish setup naoružan.`,null);
     }
   }
 
-  // ---------- log ----------
-  function addLog(message, level){
-    const entry = document.createElement("div");
-    entry.className = "log-entry" + (level === "crit" ? " crit" : level === "warn" ? " warn" : "");
-    const time = new Date().toLocaleTimeString();
-    entry.innerHTML = `<span>${message}</span><span class="t">${time}</span>`;
-    log.prepend(entry);
-    while (log.children.length > 100) log.removeChild(log.lastChild);
-  }
+  const pivots=findPivots(closes,rsi,80);
+  let statusLabel="Neutralno",statusClass="none",flagged=false;
+  if(setup.oversoldArmed)   {statusLabel="Bullish setup aktivan (čeka divergenciju)";statusClass="armed";}
+  if(setup.overboughtArmed) {statusLabel="Bearish setup aktivan (čeka divergenciju)"; statusClass="armed";}
 
-  // ---------- alarm ----------
-  function fireDivergenceAlarm(asset, tf, message, extra){
-    addLog(message, "crit");
-    alarmSound();
-    notify("🚨 " + asset.label + " Divergencija — " + tf.label, message);
-    showBigBanner(message);
-    sendEmailAlert(asset, tf, message, extra);
-  }
-
-  // ---------- email alarm (EmailJS) ----------
-  const EMAIL_STORAGE_KEY = "ethDivergenceEmailConfig";
-  function loadEmailConfig(){
-    try{
-      const raw = localStorage.getItem(EMAIL_STORAGE_KEY);
-      if (!raw) return;
-      const cfg = JSON.parse(raw);
-      el("emailTo").value = cfg.to || "";
-      el("emailPublicKey").value = cfg.publicKey || "";
-      el("emailServiceId").value = cfg.serviceId || "";
-      el("emailTemplateId").value = cfg.templateId || "";
-    }catch(e){}
-  }
-  function saveEmailConfig(){
-    const cfg = {
-      to: el("emailTo").value.trim(),
-      publicKey: el("emailPublicKey").value.trim(),
-      serviceId: el("emailServiceId").value.trim(),
-      templateId: el("emailTemplateId").value.trim(),
-    };
-    localStorage.setItem(EMAIL_STORAGE_KEY, JSON.stringify(cfg));
-    el("emailStatus").textContent = "Email podešavanja sačuvana lokalno (" + new Date().toLocaleTimeString() + ").";
-    return cfg;
-  }
-  el("emailSaveBtn").addEventListener("click", saveEmailConfig);
-  loadEmailConfig();
-
-  function emailConfigReady(cfg){
-    return cfg.to && cfg.publicKey && cfg.serviceId && cfg.templateId;
-  }
-
-  async function sendEmailViaEmailJS(subject, message, params){
-    const cfg = {
-      to: el("emailTo").value.trim(),
-      publicKey: el("emailPublicKey").value.trim(),
-      serviceId: el("emailServiceId").value.trim(),
-      templateId: el("emailTemplateId").value.trim(),
-    };
-    if (!emailConfigReady(cfg)){
-      addLog("Email nije poslat — podešavanja nisu kompletna.", "warn");
-      return;
-    }
-    if (typeof emailjs === "undefined"){
-      addLog("Email nije poslat — EmailJS biblioteka nije učitana.", "warn");
-      return;
-    }
-    try{
-      await emailjs.send(cfg.serviceId, cfg.templateId, {
-        to_email: cfg.to,
-        subject: subject,
-        message: message,
-        ...params,
-      }, { publicKey: cfg.publicKey });
-      addLog("Email alarm poslat na " + cfg.to + ".", null);
-    }catch(err){
-      addLog("Greška pri slanju email-a: " + (err && err.text ? err.text : err.message || err), "warn");
-    }
-  }
-
-  function sendEmailAlert(asset, tf, message, extra){
-    if (!el("chkEmail").checked) return;
-    sendEmailViaEmailJS(
-      `${asset.label} Divergencija (${tf.label}) — ${extra && extra.type === "bearish" ? "BEARISH" : "BULLISH"}`,
-      message,
-      {
-        timeframe: tf.label,
-        type: extra ? extra.type : "",
-        price: extra ? extra.price : "",
-        rsi: extra ? extra.rsi : "",
+  // ── BULLISH divergence ────────────────────────────────────────────────────
+  if(setup.oversoldArmed && pivots.lows.length===2){
+    const [a,b]=pivots.lows;
+    if(closes[b]<closes[a] && rsi[b]>rsi[a]){
+      // Pivot pair ID — isti par ne okida alarm dva puta
+      const pid=`${closes[a].toFixed(4)}-${closes[b].toFixed(4)}`;
+      if(pid!==setup.lastBullishPivot){
+        setup.lastBullishPivot=pid;
+        const det=`cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
+        fireDivergenceAlarm(asset,tf,
+          `[${asset.label} ${tf.label}] BULLISH divergencija (${det})`,
+          {type:"bullish",price:closes[b],rsi:rsi[b]});
       }
-    );
-  }
-
-  el("emailTestBtn").addEventListener("click", ()=>{
-    saveEmailConfig();
-    sendEmailViaEmailJS("ETH/BTC Divergence Alarm — test email", "Ovo je test poruka sa ETH/BTC divergence alarm stranice. Ako si je primio/la, podešavanje je ispravno.", { timeframe:"test", type:"test", price:"-", rsi:"-" });
-  });
-
-  let bannerTimeout = null;
-  function showBigBanner(message){
-    bigBanner.innerHTML = `🚨 ${message} <button id="closeBanner">U redu</button>`;
-    bigBanner.style.display = "block";
-    flashOverlay.style.display = "block";
-    el("closeBanner").addEventListener("click", hideBigBanner);
-    clearTimeout(bannerTimeout);
-    bannerTimeout = setTimeout(hideBigBanner, 30000);
-  }
-  function hideBigBanner(){
-    bigBanner.style.display = "none";
-    flashOverlay.style.display = "none";
-  }
-
-  // ---------- math: RSI ----------
-  function computeRSISeries(closes, period=14){
-    const out = new Array(closes.length).fill(null);
-    if (closes.length < period+1) return out;
-    let gainSum=0, lossSum=0;
-    for (let i=1;i<=period;i++){
-      const diff = closes[i]-closes[i-1];
-      if (diff>=0) gainSum+=diff; else lossSum-=diff;
+      setup.oversoldArmed=false;
+      statusLabel="BULLISH DIVERGENCIJA"; statusClass="bull"; flagged=true;
     }
-    let avgGain = gainSum/period, avgLoss = lossSum/period;
-    out[period] = avgLoss===0 ? 100 : 100 - (100/(1+(avgGain/avgLoss)));
-    for (let i=period+1;i<closes.length;i++){
-      const diff = closes[i]-closes[i-1];
-      const gain = diff>0?diff:0, loss = diff<0?-diff:0;
-      avgGain = (avgGain*(period-1)+gain)/period;
-      avgLoss = (avgLoss*(period-1)+loss)/period;
-      out[i] = avgLoss===0 ? 100 : 100 - (100/(1+(avgGain/avgLoss)));
-    }
-    return out;
   }
 
-  // pivot lows/highs in price, paired with RSI at same index
-  function findPivots(closes, rsi, lookback=80, pivotWindow=2, minSeparation=3){
-    const n = closes.length;
-    const start = Math.max(pivotWindow, n-lookback);
-    const lows = [], highs = [];
-    for (let i=start; i<n-pivotWindow; i++){
-      if (rsi[i]==null) continue;
-      let isLow=true, isHigh=true;
-      for (let w=1;w<=pivotWindow;w++){
-        if (closes[i] > closes[i-w] || closes[i] > closes[i+w]) isLow=false;
-        if (closes[i] < closes[i-w] || closes[i] < closes[i+w]) isHigh=false;
+  // ── BEARISH divergence ────────────────────────────────────────────────────
+  if(setup.overboughtArmed && pivots.highs.length===2){
+    const [a,b]=pivots.highs;
+    if(closes[b]>closes[a] && rsi[b]<rsi[a]){
+      const pid=`${closes[a].toFixed(4)}-${closes[b].toFixed(4)}`;
+      if(pid!==setup.lastBearishPivot){
+        setup.lastBearishPivot=pid;
+        const det=`cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
+        fireDivergenceAlarm(asset,tf,
+          `[${asset.label} ${tf.label}] BEARISH divergencija (${det})`,
+          {type:"bearish",price:closes[b],rsi:rsi[b]});
       }
-      if (isLow) lows.push(i);
-      if (isHigh) highs.push(i);
+      setup.overboughtArmed=false;
+      statusLabel="BEARISH DIVERGENCIJA"; statusClass="bear"; flagged=true;
     }
-    function lastTwoFarEnough(arr){
-      const filtered=[];
-      for (const idx of arr){
-        if (!filtered.length || idx-filtered[filtered.length-1] >= minSeparation) filtered.push(idx);
-      }
-      return filtered.slice(-2);
-    }
-    return { lows: lastTwoFarEnough(lows), highs: lastTwoFarEnough(highs) };
   }
 
-  // ---------- fetch ----------
-  async function fetchKlines(symbol, interval, limit){
-    const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("Binance API error " + res.status);
-    const raw = await res.json();
-    return raw.map(k=>({
-      openTime:k[0], open:+k[1], high:+k[2], low:+k[3], close:+k[4], volume:+k[5], closeTime:k[6]
-    }));
-  }
+  renderTimeframe(asset,tf,{lastClose,lastRSI,closes,statusLabel,statusClass,flagged,rsiOS,rsiOB});
+  return lastClose;
+}
 
-  // ---------- sparkline ----------
-  function drawSpark(canvasId, values){
-    const canvas = el(canvasId);
-    if (!canvas || !values.length) return;
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth || 200, h = canvas.clientHeight || 48;
-    canvas.width = w*dpr; canvas.height = h*dpr;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(dpr,dpr);
-    ctx.clearRect(0,0,w,h);
-    const min = Math.min(...values), max = Math.max(...values);
-    const range = (max-min) || 1;
-    ctx.beginPath();
-    values.forEach((v,i)=>{
-      const x = (i/(values.length-1))*w;
-      const y = h - ((v-min)/range)*h;
-      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.strokeStyle = values[values.length-1] >= values[0] ? "#27d17f" : "#ff4d6d";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
+function renderTimeframe(asset,tf,d){
+  const k=`${asset.key}-${tf.key}`;
+  el(`price-${k}`).textContent=fmtPrice(d.lastClose,asset);
+  const rsiEl=el(`rsi-${k}`);
+  rsiEl.textContent=fmt(d.lastRSI,1);
+  rsiEl.className="val"+(d.lastRSI<(d.rsiOS||30)?" green":d.lastRSI>(d.rsiOB||70)?" red":"");
+  const bar=el(`rsibar-${k}`);
+  bar.style.width=Math.min(100,Math.max(0,d.lastRSI||0))+"%";
+  bar.style.background=d.lastRSI<(d.rsiOS||30)?"var(--green)":d.lastRSI>(d.rsiOB||70)?"var(--red)":"var(--blue)";
+  el(`status-${k}`).innerHTML=`<span class="badge ${d.statusClass}">${d.statusLabel}</span>`;
+  drawSpark(`spark-${k}`,d.closes.slice(-60));
+  el(`card-${k}`).classList.toggle("alert",d.flagged);
+}
 
-  function fmt(n, d=2){ return (n==null || isNaN(n)) ? "—" : n.toFixed(d); }
-
-  // ---------- per-timeframe processing ----------
-  async function processTimeframe(asset, tf){
-    const candles = await fetchKlines(asset.symbol, tf.binanceInterval, 300);
-    if (candles.length < 35) return null;
-
-    const closes = candles.map(c=>c.close);
-    const rsi = computeRSISeries(closes, 14);
-    const lastClose = closes[closes.length-1];
-    const lastRSI = rsi[rsi.length-1];
-
-    const rsiOversold = asset.oversold != null ? asset.oversold : parseFloat(el("rsiOversold").value || 30);
-    const rsiOverbought = asset.overbought != null ? asset.overbought : parseFloat(el("rsiOverbought").value || 70);
-    const setup = state.setups[asset.symbol+"-"+tf.key];
-
-    if (lastRSI != null){
-      if (lastRSI < rsiOversold && !setup.oversoldArmed){
-        setup.oversoldArmed = true;
-        addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} ispod ${rsiOversold} — bullish setup naoružan, čeka se divergencija.`, null);
-      }
-      if (lastRSI > rsiOverbought && !setup.overboughtArmed){
-        setup.overboughtArmed = true;
-        addLog(`[${asset.label} ${tf.label}] RSI ${lastRSI.toFixed(1)} iznad ${rsiOverbought} — bearish setup naoružan, čeka se divergencija.`, null);
+// ---------- poll ----------
+async function pollOnce(){
+  let hasError=false;
+  for(const asset of ASSETS){
+    let assetPrice=null;
+    for(const tf of asset.timeframes){
+      try{
+        const lc=await processTimeframe(asset,tf);
+        if(tf.key==="15m"&&lc!=null) assetPrice=lc;
+      }catch(err){
+        hasError=true;
+        addLog(`[${asset.label} ${tf.label}] Greška: ${err.message}`,"warn");
       }
     }
-
-    const pivots = findPivots(closes, rsi, 80);
-    let statusLabel = "Neutralno", statusClass = "none", flagged = false;
-
-    if (setup.oversoldArmed) { statusLabel = "Bullish setup aktivan (čeka divergenciju)"; statusClass = "armed"; }
-    if (setup.overboughtArmed) { statusLabel = "Bearish setup aktivan (čeka divergenciju)"; statusClass = "armed"; }
-
-    if (setup.oversoldArmed && pivots.lows.length === 2){
-      const [a,b] = pivots.lows;
-      if (closes[b] < closes[a] && rsi[b] > rsi[a]){
-        const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(asset, tf, `[${asset.label} ${tf.label}] BULLISH divergencija potvrđena nakon oversold-a (${detail})`, { type:"bullish", price: closes[b], rsi: rsi[b] });
-        setup.oversoldArmed = false;
-        statusLabel = "BULLISH DIVERGENCIJA"; statusClass = "bull"; flagged = true;
+    if(assetPrice!=null){
+      el("bigPrice"+asset.key).textContent=fmtPrice(assetPrice,asset);
+      const chgEl=el("priceChg"+asset.key);
+      if(state.lastPrice[asset.key]!=null){
+        const diff=assetPrice-state.lastPrice[asset.key];
+        const pct=(diff/state.lastPrice[asset.key])*100;
+        chgEl.textContent=(diff>=0?"+":"")+diff.toFixed(2)+" ("+pct.toFixed(2)+"%)";
+        chgEl.className="chg"+(diff>=0?" up":" down");
       }
-    }
-    if (setup.overboughtArmed && pivots.highs.length === 2){
-      const [a,b] = pivots.highs;
-      if (closes[b] > closes[a] && rsi[b] < rsi[a]){
-        const detail = `cena ${closes[a].toFixed(2)}→${closes[b].toFixed(2)}, RSI ${rsi[a].toFixed(1)}→${rsi[b].toFixed(1)}`;
-        fireDivergenceAlarm(asset, tf, `[${asset.label} ${tf.label}] BEARISH divergencija potvrđena nakon overbought-a (${detail})`, { type:"bearish", price: closes[b], rsi: rsi[b] });
-        setup.overboughtArmed = false;
-        statusLabel = "BEARISH DIVERGENCIJA"; statusClass = "bear"; flagged = true;
-      }
-    }
-
-    renderTimeframe(asset, tf, { lastClose, lastRSI, closes, statusLabel, statusClass, flagged });
-    return lastClose;
-  }
-
-  function renderTimeframe(asset, tf, d){
-    el(`price-${asset.symbol}-${tf.key}`).textContent = "$" + fmt(d.lastClose);
-    const rsiEl = el(`rsi-${asset.symbol}-${tf.key}`);
-    rsiEl.textContent = fmt(d.lastRSI,1);
-    rsiEl.className = "val " + (d.lastRSI<30 ? "green" : d.lastRSI>70 ? "red" : "");
-    const bar = el(`rsibar-${asset.symbol}-${tf.key}`);
-    bar.style.width = Math.min(100,Math.max(0,d.lastRSI||0)) + "%";
-    bar.style.background = d.lastRSI<30 ? "var(--green)" : d.lastRSI>70 ? "var(--red)" : "var(--blue)";
-    el(`status-${asset.symbol}-${tf.key}`).innerHTML = `<span class="badge ${d.statusClass}">${d.statusLabel}</span>`;
-    drawSpark(`spark-${asset.symbol}-${tf.key}`, d.closes.slice(-60));
-    el(`card-${asset.symbol}-${tf.key}`).classList.toggle("alert", d.flagged);
-  }
-
-  // ---------- main poll ----------
-  async function pollOnce(){
-    try{
-      for (const asset of ASSETS){
-        let assetPrice = null;
-        for (const tf of asset.timeframes){
-          const lastClose = await processTimeframe(asset, tf);
-          if (tf.key === "15m" && lastClose != null) assetPrice = lastClose;
-        }
-        if (assetPrice != null){
-          const bigPriceEl = el("bigPrice" + asset.symbol);
-          const priceChgEl = el("priceChg" + asset.symbol);
-          bigPriceEl.textContent = "$" + assetPrice.toFixed(2);
-          if (state.lastPrice[asset.symbol] != null){
-            const diff = assetPrice - state.lastPrice[asset.symbol];
-            const pct = (diff/state.lastPrice[asset.symbol])*100;
-            priceChgEl.textContent = (diff>=0?"+":"") + diff.toFixed(2) + " (" + pct.toFixed(2) + "%)";
-            priceChgEl.className = "chg " + (diff>=0?"up":"down");
-          }
-          state.lastPrice[asset.symbol] = assetPrice;
-        }
-      }
-      el("statusDot").className = "status-dot live";
-      el("lastUpdate").textContent = "Ažurirano: " + new Date().toLocaleTimeString();
-    }catch(err){
-      el("statusDot").className = "status-dot error";
-      el("lastUpdate").textContent = "Greška: " + err.message;
-      addLog("Greška pri preuzimanju podataka: " + err.message, "warn");
+      state.lastPrice[asset.key]=assetPrice;
     }
   }
+  el("statusDot").className="status-dot"+(hasError?" error":" live");
+  el("lastUpdate").textContent="Ažurirano: "+new Date().toLocaleTimeString();
+}
 
-  // ---------- controls ----------
-  el("startBtn").addEventListener("click", ()=>{
-    if (state.running) return;
-    state.running = true;
-    el("startBtn").disabled = true;
-    el("stopBtn").disabled = false;
-    addLog("Praćenje pokrenuto (ETH + BTC).", null);
-    pollOnce();
-    const interval = parseInt(el("pollInterval").value,10);
-    state.timer = setInterval(pollOnce, interval);
-  });
-  el("stopBtn").addEventListener("click", ()=>{
-    state.running = false;
-    el("startBtn").disabled = false;
-    el("stopBtn").disabled = true;
+// ---------- controls ----------
+el("startBtn").addEventListener("click",()=>{
+  if(state.running) return;
+  state.running=true;
+  el("startBtn").disabled=true;
+  el("stopBtn").disabled=false;
+  addLog("Praćenje pokrenuto — ETH, BTC, S&P 500, NASDAQ.",null);
+  pollOnce();
+  state.timer=setInterval(pollOnce,parseInt(el("pollInterval").value,10));
+});
+el("stopBtn").addEventListener("click",()=>{
+  state.running=false;
+  el("startBtn").disabled=false;
+  el("stopBtn").disabled=true;
+  clearInterval(state.timer);
+  el("statusDot").className="status-dot";
+  addLog("Praćenje pauzirano.",null);
+});
+el("pollInterval").addEventListener("change",()=>{
+  if(state.running){
     clearInterval(state.timer);
-    el("statusDot").className = "status-dot";
-    addLog("Praćenje pauzirano.", null);
-  });
-  el("pollInterval").addEventListener("change", ()=>{
-    if (state.running){
-      clearInterval(state.timer);
-      state.timer = setInterval(pollOnce, parseInt(el("pollInterval").value,10));
-    }
-  });
+    state.timer=setInterval(pollOnce,parseInt(el("pollInterval").value,10));
+  }
+});
+
 })();
 </script>
 </body>
