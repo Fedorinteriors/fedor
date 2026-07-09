@@ -494,27 +494,29 @@ async function fetchStooq(stooqSym,interval){
   const d1=new Date(d2.getTime()-90*24*60*60*1000);
   const fmt=d=>d.toISOString().slice(0,10).replace(/-/g,"");
   const csvUrl=`https://stooq.com/q/d/l/?s=${enc}&d1=${fmt(d1)}&d2=${fmt(d2)}&i=${interval}`;
-  const urls=[
+  const proxies=[
+    "https://corsproxy.io/?url="+encodeURIComponent(csvUrl),
     "https://api.allorigins.win/raw?url="+encodeURIComponent(csvUrl),
-    csvUrl, // direktno kao fallback
+    "https://thingproxy.freeboard.io/fetch/"+csvUrl,
+    csvUrl,
   ];
+  function parseCSV(text){
+    if(!text||text.trimStart().startsWith("<")) throw new Error("Nije CSV odgovor");
+    const lines=text.trim().split(/\r?\n/);
+    if(lines.length<2) throw new Error("Prazni podaci");
+    const header=lines[0].split(",").map(h=>h.trim().toLowerCase());
+    const ci=header.indexOf("close");
+    if(ci===-1) throw new Error("Nema Close kolone");
+    const vals=lines.slice(1).map(l=>parseFloat(l.split(",")[ci])).filter(v=>v>0&&!isNaN(v));
+    if(!vals.length) throw new Error("Nema validnih cijena");
+    return vals.slice(-300);
+  }
   let lastErr;
-  for(const url of urls){
+  for(const url of proxies){
     try{
       const res=await fetch(url);
       if(!res.ok) throw new Error("HTTP "+res.status);
-      const text=await res.text();
-      if(!text||text.trimStart().startsWith("<")) throw new Error("Nije CSV odgovor");
-      const lines=text.trim().split(/\r?\n/);
-      if(lines.length<2) throw new Error("Prazni podaci");
-      const header=lines[0].split(",").map(h=>h.trim().toLowerCase());
-      const ci=header.indexOf("close");
-      if(ci===-1) throw new Error("Nema Close kolone");
-      const vals=lines.slice(1)
-        .map(l=>parseFloat(l.split(",")[ci]))
-        .filter(v=>v>0&&!isNaN(v));
-      if(!vals.length) throw new Error("Nema validnih cijena");
-      return vals.slice(-300);
+      return parseCSV(await res.text());
     }catch(e){lastErr=e;}
   }
   throw lastErr||new Error("Stooq nije dostupan za "+stooqSym);
