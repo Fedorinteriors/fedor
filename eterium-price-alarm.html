@@ -211,22 +211,24 @@ const ASSETS = [
   },
   {
     symbol:"^GSPC", key:"SPX", label:"S&P 500", name:"S&P 500",
-    color:"var(--green)", source:"yahoo",
+    color:"var(--green)", source:"stooq",
+    stooqSym:"^spx",
     oversold:15, overbought:77,
     timeframes:[
-      {key:"15m",label:"15 min",yahooInterval:"15m",yahooRange:"60d"},
-      {key:"30m",label:"30 min",yahooInterval:"30m",yahooRange:"60d"},
-      {key:"1h", label:"1 sat", yahooInterval:"1h", yahooRange:"60d"},
+      {key:"15m",label:"15 min",stooqInterval:"15"},
+      {key:"30m",label:"30 min",stooqInterval:"30"},
+      {key:"1h", label:"1 sat", stooqInterval:"60"},
     ]
   },
   {
-    symbol:"^IXIC", key:"NDX", label:"NASDAQ", name:"NASDAQ",
-    color:"var(--purple)", source:"yahoo",
+    symbol:"^NDX", key:"NDX", label:"NASDAQ", name:"NASDAQ",
+    color:"var(--purple)", source:"stooq",
+    stooqSym:"^ndq",
     oversold:15, overbought:77,
     timeframes:[
-      {key:"15m",label:"15 min",yahooInterval:"15m",yahooRange:"60d"},
-      {key:"30m",label:"30 min",yahooInterval:"30m",yahooRange:"60d"},
-      {key:"1h", label:"1 sat", yahooInterval:"1h", yahooRange:"60d"},
+      {key:"15m",label:"15 min",stooqInterval:"15"},
+      {key:"30m",label:"30 min",stooqInterval:"30"},
+      {key:"1h", label:"1 sat", stooqInterval:"60"},
     ]
   },
 ];
@@ -485,31 +487,37 @@ async function fetchBinance(symbol,interval,limit=300){
   return (await res.json()).map(k=>({close:+k[4]}));
 }
 
-/// ---------- fetch: Yahoo Finance ----------
-async function fetchYahoo(symbol,interval,range){
-  const enc=encodeURIComponent(symbol);
-  const apiPath=`/v8/finance/chart/${enc}?interval=${interval}&range=${range}&includePrePost=false`;
-  const direct1="https://query1.finance.yahoo.com"+apiPath;
-  const direct2="https://query2.finance.yahoo.com"+apiPath;
-  const proxy="https://corsproxy.io/?url="+encodeURIComponent(direct1);
-  const urls=[direct1,direct2,proxy];
+// ---------- fetch: Stooq CSV (S&P 500, NASDAQ) ----------
+async function fetchStooq(stooqSym,interval){
+  const enc=encodeURIComponent(stooqSym);
+  const d2=new Date();
+  const d1=new Date(d2.getTime()-90*24*60*60*1000);
+  const fmt=d=>d.toISOString().slice(0,10).replace(/-/g,"");
+  const csvUrl=`https://stooq.com/q/d/l/?s=${enc}&d1=${fmt(d1)}&d2=${fmt(d2)}&i=${interval}`;
+  const urls=[
+    "https://api.allorigins.win/raw?url="+encodeURIComponent(csvUrl),
+    csvUrl, // direktno kao fallback
+  ];
   let lastErr;
   for(const url of urls){
     try{
       const res=await fetch(url);
       if(!res.ok) throw new Error("HTTP "+res.status);
-      const json=await res.json();
-      const result=json?.chart?.result?.[0];
-      if(!result) throw new Error("Nema podataka za "+symbol);
-      const ts=result.timestamp||[];
-      const q=result.indicators.quote[0];
-      return ts
-        .map((_,i)=>({close:q.close?.[i]}))
-        .filter(c=>c.close!=null&&!isNaN(c.close)&&c.close>0)
-        .slice(-300);
+      const text=await res.text();
+      if(!text||text.trimStart().startsWith("<")) throw new Error("Nije CSV odgovor");
+      const lines=text.trim().split(/\r?\n/);
+      if(lines.length<2) throw new Error("Prazni podaci");
+      const header=lines[0].split(",").map(h=>h.trim().toLowerCase());
+      const ci=header.indexOf("close");
+      if(ci===-1) throw new Error("Nema Close kolone");
+      const vals=lines.slice(1)
+        .map(l=>parseFloat(l.split(",")[ci]))
+        .filter(v=>v>0&&!isNaN(v));
+      if(!vals.length) throw new Error("Nema validnih cijena");
+      return vals.slice(-300);
     }catch(e){lastErr=e;}
   }
-  throw lastErr||new Error("Yahoo Finance nije dostupan za "+symbol);
+  throw lastErr||new Error("Stooq nije dostupan za "+stooqSym);
 }
 
 // ---------- sparkline ----------
@@ -535,7 +543,7 @@ function fmt(n,d=2){return(n==null||isNaN(n))?"—":n.toFixed(d);}
 function fmtPrice(n,asset){
   if(n==null||isNaN(n)) return "—";
   const s=n>=1000?n.toLocaleString("en-US",{maximumFractionDigits:2}):n.toFixed(2);
-  return asset.source==="binance"?"$"+s:s;
+  return asset.source==="binance"?"$"+s:s.replace(/\B(?=(\d{3})+(?!\d))/g,",");
 }
 
 // ---------- per-timeframe ----------
@@ -544,7 +552,7 @@ async function processTimeframe(asset,tf){
   if(asset.source==="binance"){
     closes=(await fetchBinance(asset.symbol,tf.binanceInterval,300)).map(c=>c.close);
   } else {
-    closes=(await fetchYahoo(asset.symbol,tf.yahooInterval,tf.yahooRange)).map(c=>c.close);
+    closes=await fetchStooq(asset.stooqSym,tf.stooqInterval);
   }
   if(closes.length<35) return null;
 
