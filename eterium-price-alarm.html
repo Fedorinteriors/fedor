@@ -485,16 +485,19 @@ async function fetchBinance(symbol,interval,limit=300){
   return (await res.json()).map(k=>({close:+k[4]}));
 }
 
-// ---------- fetch: Yahoo Finance ----------
+/// ---------- fetch: Yahoo Finance ----------
 async function fetchYahoo(symbol,interval,range){
   const enc=encodeURIComponent(symbol);
-  const base=`/v8/finance/chart/${enc}?interval=${interval}&range=${range}&includePrePost=false`;
-  const hosts=["https://query1.finance.yahoo.com","https://query2.finance.yahoo.com"];
+  const apiPath=`/v8/finance/chart/${enc}?interval=${interval}&range=${range}&includePrePost=false`;
+  const direct1="https://query1.finance.yahoo.com"+apiPath;
+  const direct2="https://query2.finance.yahoo.com"+apiPath;
+  const proxy="https://corsproxy.io/?url="+encodeURIComponent(direct1);
+  const urls=[direct1,direct2,proxy];
   let lastErr;
-  for(const host of hosts){
+  for(const url of urls){
     try{
-      const res=await fetch(host+base);
-      if(!res.ok) throw new Error("Yahoo HTTP "+res.status);
+      const res=await fetch(url);
+      if(!res.ok) throw new Error("HTTP "+res.status);
       const json=await res.json();
       const result=json?.chart?.result?.[0];
       if(!result) throw new Error("Nema podataka za "+symbol);
